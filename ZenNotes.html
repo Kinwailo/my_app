@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenNotes - 極簡 Markdown 筆記 (含 Google Drive 同步與層級標籤)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Marked parser for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- DOMPurify for security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <!-- Google Identity Services for Google Drive OAuth -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.7);
+        }
+        
+        /* Markdown Preview Basic Styling */
+        .markdown-preview {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+        }
+        .markdown-preview h1 { font-size: 2em; font-weight: 800; border-bottom: 1px solid rgba(156,163,175,0.3); padding-bottom: 0.3em; margin-top: 0.8em; margin-bottom: 0.5em; }
+        .markdown-preview h2 { font-size: 1.5em; font-weight: 700; border-bottom: 1px solid rgba(156,163,175,0.2); padding-bottom: 0.3em; margin-top: 0.8em; margin-bottom: 0.4em; }
+        .markdown-preview h3 { font-size: 1.25em; font-weight: 600; margin-top: 0.8em; margin-bottom: 0.4em; }
+        .markdown-preview p { margin-bottom: 0.8em; color: inherit; }
+        .markdown-preview ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 0.8em; }
+        .markdown-preview ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 0.8em; }
+        .markdown-preview li { margin-bottom: 0.2em; }
+        .markdown-preview blockquote { border-left: 4px solid #3b82f6; padding-left: 1em; margin: 0.8em 0; color: #6b7280; font-style: italic; }
+        .dark .markdown-preview blockquote { color: #9ca3af; }
+        .markdown-preview code { background-color: rgba(156, 163, 175, 0.2); padding: 0.2em 0.4em; border-radius: 0.25em; font-family: monospace; font-size: 0.9em; }
+        .markdown-preview pre { background-color: #1e293b; color: #f8fafc; padding: 1em; border-radius: 0.5em; overflow-x: auto; margin-bottom: 0.8em; }
+        .markdown-preview pre code { background-color: transparent; color: inherit; padding: 0; }
+        .markdown-preview a { color: #2563eb; text-decoration: underline; }
+        .dark .markdown-preview a { color: #60a5fa; }
+        .markdown-preview table { width: 100%; border-collapse: collapse; margin-bottom: 0.8em; }
+        .markdown-preview th, .markdown-preview td { border: 1px solid rgba(156,163,175,0.3); padding: 0.5em; text-align: left; }
+        .markdown-preview th { background-color: rgba(156,163,175,0.1); }
+        .markdown-preview hr { border: 0; height: 1px; background: rgba(156,163,175,0.3); margin: 1.5em 0; }
+        .markdown-preview input[type="checkbox"] { margin-right: 0.5em; }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 antialiased selection:bg-brand-500 selection:text-white">
+
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        // Icons
+        const IconPlus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>;
+        const IconTrash = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>;
+        const IconSearch = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>;
+        const IconEye = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>;
+        const IconEdit = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
+        const IconColumns = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z"/></svg>;
+        const IconSidebar = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7"/></svg>;
+        const IconSun = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>;
+        const IconMoon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>;
+        const IconPin = ({ filled }) => <svg className={`w-3.5 h-3.5 ${filled ? 'fill-amber-500 text-amber-500' : 'text-slate-400 hover:text-amber-500'}`} fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>;
+        const IconDownload = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>;
+        const IconKeyboard = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>;
+        const IconMaximize = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>;
+        const IconMinimize = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>;
+        const IconTag = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>;
+        const IconCloud = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 001-9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>;
+        const IconFolder = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>;
+        const IconChevronDown = () => <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>;
+        const IconChevronRight = () => <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>;
+
+        const DEFAULT_NOTES = [
+            {
+                id: 'welcome-note',
+                title: '歡迎使用 ZenNotes 👋',
+                content: `# 歡迎使用 ZenNotes 極簡筆記！
+
+這是一個專為高效率寫作與專注思考設計的 **Markdown 筆記應用程式**。
+
+---
+
+### 🌟 核心特色
+
+1. **頂部標題工具列**：讓寫作視窗更潔淨、專注。
+2. **階層標籤分類 (Gmail Style Tag/Sub-tag)**：支援例如 \`工作/專案A\`、\`個人/財務\` 的子標籤結構。
+3. **Google Drive 同步**：安全連線至 Google Drive 的專屬 App 空間 (\`appDataFolder\`)，不影響其他雲端檔案。
+4. **鍵盤友善與雙欄預覽**：提供快顯快捷鍵與即時 Markdown 渲染。
+
+---
+
+### ⌨️ 常用快捷鍵指南
+
+- \`Cmd / Ctrl + N\` : 建立新筆記
+- \`Cmd / Ctrl + F\` 或 \`/\` : 聚焦搜尋欄
+- \`Cmd / Ctrl + E\` : 切換編輯 / 預覽 / 雙欄模式
+- \`Cmd / Ctrl + Shift + Z\` : 切換極簡專注模式
+
+祝您寫作愉快！`,
+                tags: ['工作/專案A', '教學'],
+                isPinned: true,
+                createdAt: Date.now() - 3600000,
+                updatedAt: Date.now() - 1800000,
+            },
+            {
+                id: 'markdown-cheat-sheet',
+                title: 'Markdown 快速速查表 📑',
+                content: `# Markdown 速查表
+
+## 標題
+# H1 標題
+## H2 標題
+
+## 文字格式
+*斜體* 或 _斜體_
+**粗體** 或 __粗體__
+
+## 階層標籤範例
+- 標籤可以用斜線分類：\`工作/專案B\`、\`學習/前端\`
+- 在左側選單點擊父標籤可展開子標籤`,
+                tags: ['學習/Markdown', '工作/速查表'],
+                isPinned: false,
+                createdAt: Date.now() - 86400000,
+                updatedAt: Date.now() - 43200000,
+            }
+        ];
+
+        // Build nested tag tree from flat tag list (e.g., ["工作/專案A", "工作/專案B", "個人"])
+        const buildTagTree = (tagList) => {
+            const root = {};
+            tagList.forEach(tag => {
+                const parts = tag.split('/');
+                let current = root;
+                let fullPath = '';
+                parts.forEach((part, index) => {
+                    fullPath = fullPath ? `${fullPath}/${part}` : part;
+                    if (!current[part]) {
+                        current[part] = {
+                            name: part,
+                            fullPath: fullPath,
+                            children: {}
+                        };
+                    }
+                    current = current[part].children;
+                });
+            });
+            return root;
+        };
+
+        function App() {
+            const [notes, setNotes] = React.useState(() => {
+                const saved = localStorage.getItem('zen_notes_data');
+                if (saved) {
+                    try { return JSON.parse(saved); } catch (e) { console.error(e); }
+                }
+                return DEFAULT_NOTES;
+            });
+
+            const [activeNoteId, setActiveNoteId] = React.useState(() => {
+                const savedId = localStorage.getItem('zen_notes_active_id');
+                return savedId && notes.some(n => n.id === savedId) ? savedId : (notes[0]?.id || null);
+            });
+
+            const [searchQuery, setSearchQuery] = React.useState('');
+            const [selectedTag, setSelectedTag] = React.useState(null); // Filter by full path e.g. "工作" or "工作/專案A"
+            const [expandedTags, setExpandedTags] = React.useState({ '工作': true, '學習': true });
+            const [viewMode, setViewMode] = React.useState('split'); // 'edit', 'preview', 'split'
+            const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+            const [isDarkMode, setIsDarkMode] = React.useState(() => {
+                return localStorage.getItem('zen_notes_theme') === 'dark' || 
+                       (!('zen_notes_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            });
+            const [isZenMode, setIsZenMode] = React.useState(false);
+            const [showShortcutModal, setShowShortcutModal] = React.useState(false);
+            const [showGDriveModal, setShowGDriveModal] = React.useState(false);
+            const [notification, setNotification] = React.useState(null);
+
+            // Tag input state for current active note
+            const [newTagInput, setNewTagInput] = React.useState('');
+            const [showTagAdder, setShowTagAdder] = React.useState(false);
+
+            // Google Drive Sync State
+            const [gDriveConfig, setGDriveConfig] = React.useState(() => {
+                const savedConfig = localStorage.getItem('zen_notes_gdrive_config');
+                return savedConfig ? JSON.parse(savedConfig) : { clientId: '', connected: false, autoSync: false, lastSynced: null, userEmail: null };
+            });
+            const [accessToken, setAccessToken] = React.useState(null);
+            const [userInfo, setUserInfo] = React.useState(null);
+            const [isSyncing, setIsSyncing] = React.useState(false);
+
+            const searchInputRef = React.useRef(null);
+            const textareaRef = React.useRef(null);
+
+            // Sync notes to LocalStorage
+            React.useEffect(() => {
+                localStorage.setItem('zen_notes_data', JSON.stringify(notes));
+            }, [notes]);
+
+            // Sync active ID to LocalStorage
+            React.useEffect(() => {
+                if (activeNoteId) {
+                    localStorage.setItem('zen_notes_active_id', activeNoteId);
+                }
+            }, [activeNoteId]);
+
+            // Save GDrive Config
+            React.useEffect(() => {
+                localStorage.setItem('zen_notes_gdrive_config', JSON.stringify(gDriveConfig));
+            }, [gDriveConfig]);
+
+            // Dark Mode Class Handling
+            React.useEffect(() => {
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('zen_notes_theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('zen_notes_theme', 'light');
+                }
+            }, [isDarkMode]);
+
+            const showToast = (msg) => {
+                setNotification(msg);
+                setTimeout(() => setNotification(null), 2500);
+            };
+
+            React.useEffect(() => {
+                const handleKeyDown = (e) => {
+                    const isMod = e.metaKey || e.ctrlKey;
+
+                    if (isMod && e.key.toLowerCase() === 'n') {
+                        e.preventDefault();
+                        createNewNote();
+                    }
+                    else if ((isMod && e.key.toLowerCase() === 'f') || (e.key === '/' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT')) {
+                        e.preventDefault();
+                        searchInputRef.current?.focus();
+                    }
+                    else if (isMod && e.key.toLowerCase() === 'e') {
+                        e.preventDefault();
+                        setViewMode(prev => prev === 'edit' ? 'split' : prev === 'split' ? 'preview' : 'edit');
+                    }
+                    else if (isMod && e.shiftKey && e.key.toLowerCase() === 'z') {
+                        e.preventDefault();
+                        setIsZenMode(prev => !prev);
+                        showToast(!isZenMode ? '已開啟專注模式 (Esc 退出)' : '已退出專注模式');
+                    }
+                    else if (e.key === 'Escape') {
+                        if (isZenMode) setIsZenMode(false);
+                        if (showShortcutModal) setShowShortcutModal(false);
+                        if (showGDriveModal) setShowGDriveModal(false);
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [isZenMode, showShortcutModal, showGDriveModal]);
+
+            const activeNote = notes.find(n => n.id === activeNoteId) || notes[0];
+
+            const createNewNote = () => {
+                const newNote = {
+                    id: 'note-' + Date.now(),
+                    title: '未命名筆記',
+                    content: '',
+                    tags: selectedTag ? [selectedTag] : [],
+                    isPinned: false,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                };
+                setNotes(prev => [newNote, ...prev]);
+                setActiveNoteId(newNote.id);
+                showToast('已建立新筆記');
+                setTimeout(() => {
+                    if (textareaRef.current) textareaRef.current.focus();
+                }, 100);
+            };
+
+            const updateActiveNote = (updates) => {
+                if (!activeNote) return;
+                setNotes(prev => prev.map(note => {
+                    if (note.id === activeNote.id) {
+                        return {
+                            ...note,
+                            ...updates,
+                            updatedAt: Date.now()
+                        };
+                    }
+                    return note;
+                }));
+            };
+
+            const deleteNote = (id, e) => {
+                if (e) e.stopPropagation();
+                const targetNote = notes.find(n => n.id === id);
+                if (!targetNote) return;
+
+                const filtered = notes.filter(n => n.id !== id);
+                setNotes(filtered);
+                
+                if (activeNoteId === id) {
+                    setActiveNoteId(filtered[0]?.id || null);
+                }
+                showToast(`已刪除：「${targetNote.title || '筆記'}」`);
+            };
+
+            const togglePinNote = (id, e) => {
+                if (e) e.stopPropagation();
+                setNotes(prev => prev.map(n => n.id === id ? { ...n, isPinned: !n.isPinned } : n));
+            };
+
+            const exportNoteAsMarkdown = (noteToExport, e) => {
+                if (e) e.stopPropagation();
+                const note = noteToExport || activeNote;
+                if (!note) return;
+                const blob = new Blob([note.content], { type: 'text/markdown;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${note.title || 'note'}.md`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showToast(`已匯出：「${note.title}.md」`);
+            };
+
+            // Tag Management
+            const handleAddTagToActiveNote = () => {
+                if (!newTagInput.trim() || !activeNote) return;
+                const cleanTag = newTagInput.trim().replace(/^\/+|\/+$/g, '');
+                const currentTags = activeNote.tags || [];
+                if (!currentTags.includes(cleanTag)) {
+                    updateActiveNote({ tags: [...currentTags, cleanTag] });
+                    showToast(`已新增標籤：${cleanTag}`);
+                }
+                setNewTagInput('');
+                setShowTagAdder(false);
+            };
+
+            const handleRemoveTagFromActiveNote = (tagToRemove) => {
+                if (!activeNote) return;
+                const updatedTags = (activeNote.tags || []).filter(t => t !== tagToRemove);
+                updateActiveNote({ tags: updatedTags });
+                showToast(`已移除標籤：${tagToRemove}`);
+            };
+
+            // Google OAuth2 Login using Google Identity Services
+            const handleGoogleLogin = () => {
+                if (!gDriveConfig.clientId || !gDriveConfig.clientId.trim()) {
+                    setShowGDriveModal(true);
+                    showToast('請先設定您的 Google Client ID');
+                    return;
+                }
+
+                if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+                    showToast('Google API 載入中，請稍後再試');
+                    return;
+                }
+
+                try {
+                    const client = window.google.accounts.oauth2.initTokenClient({
+                        client_id: gDriveConfig.clientId.trim(),
+                        scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                        callback: async (response) => {
+                            if (response.error) {
+                                console.error('OAuth Error:', response);
+                                showToast(`登入失敗: ${response.error_description || response.error}`);
+                                return;
+                            }
+                            if (response.access_token) {
+                                setAccessToken(response.access_token);
+                                await fetchUserProfile(response.access_token);
+                                showToast('Google 帳號登入成功！');
+                                syncWithDrive(response.access_token);
+                            }
+                        }
+                    });
+                    client.requestAccessToken();
+                } catch (err) {
+                    console.error('Google Auth Init Error:', err);
+                    showToast('Google Auth 初始化失敗，請確認 Client ID 格式');
+                }
+            };
+
+            // Fetch Logged-in Google User Profile
+            const fetchUserProfile = async (token) => {
+                try {
+                    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const info = await res.json();
+                        setUserInfo({ name: info.name, email: info.email, picture: info.picture });
+                        setGDriveConfig(prev => ({ ...prev, connected: true, userEmail: info.email }));
+                    }
+                } catch (e) {
+                    console.error('Fetch Profile Error:', e);
+                }
+            };
+
+            // Logout Google Account
+            const handleGoogleLogout = () => {
+                if (accessToken && window.google?.accounts?.oauth2) {
+                    window.google.accounts.oauth2.revoke(accessToken, () => {});
+                }
+                setAccessToken(null);
+                setUserInfo(null);
+                setGDriveConfig(prev => ({ ...prev, connected: false, userEmail: null }));
+                showToast('已登出 Google 帳號');
+            };
+
+            // Upload / Sync Notes to Google Drive appDataFolder
+            const syncWithDrive = async (overrideToken = null) => {
+                const token = overrideToken || accessToken;
+                if (!token) {
+                    handleGoogleLogin();
+                    return;
+                }
+
+                setIsSyncing(true);
+                showToast('正在備份至 Google Drive App 空間...');
+
+                try {
+                    // 1. Search existing backup file in appDataFolder
+                    const listRes = await fetch(
+                        "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='zen_notes_backup.json'+and+'appDataFolder'+in+parents",
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    const listData = await listRes.json();
+                    const existingFile = listData.files && listData.files[0];
+
+                    const backupPayload = JSON.stringify({
+                        appName: "ZenNotes",
+                        version: "1.0",
+                        updatedAt: Date.now(),
+                        notes: notes
+                    }, null, 2);
+
+                    if (existingFile) {
+                        // Patch existing file
+                        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=multipart`, {
+                            method: 'PATCH',
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'multipart/related; boundary=zen_notes_boundary'
+                            },
+                            body: `--zen_notes_boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: 'zen_notes_backup.json' })}\r\n--zen_notes_boundary\r\nContent-Type: application/json\r\n\r\n${backupPayload}\r\n--zen_notes_boundary--`
+                        });
+                    } else {
+                        // Create new file
+                        const metadata = {
+                            name: 'zen_notes_backup.json',
+                            mimeType: 'application/json',
+                            parents: ['appDataFolder']
+                        };
+                        await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                            method: 'POST',
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'multipart/related; boundary=zen_notes_boundary'
+                            },
+                            body: `--zen_notes_boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--zen_notes_boundary\r\nContent-Type: application/json\r\n\r\n${backupPayload}\r\n--zen_notes_boundary--`
+                        });
+                    }
+
+                    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    setGDriveConfig(prev => ({ ...prev, connected: true, lastSynced: timestamp }));
+                    showToast(`同步成功！已儲存至 Google Drive (${timestamp})`);
+                } catch (err) {
+                    console.error('Drive Sync Error:', err);
+                    showToast('同步失敗，請重新登入 Google 帳號');
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            // Download / Restore Notes from Google Drive appDataFolder
+            const restoreFromDrive = async () => {
+                if (!accessToken) {
+                    showToast('請先進行 Google Auth 登入');
+                    return;
+                }
+
+                setIsSyncing(true);
+                try {
+                    const listRes = await fetch(
+                        "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='zen_notes_backup.json'+and+'appDataFolder'+in+parents",
+                        { headers: { Authorization: `Bearer ${accessToken}` } }
+                    );
+                    const listData = await listRes.json();
+                    const existingFile = listData.files && listData.files[0];
+
+                    if (!existingFile) {
+                        showToast('雲端 App 空間中尚無備份檔案');
+                        setIsSyncing(false);
+                        return;
+                    }
+
+                    const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`, {
+                        headers: { Authorization: `Bearer ${accessToken}` }
+                    });
+                    const backupData = await fileRes.json();
+
+                    if (backupData && Array.isArray(backupData.notes)) {
+                        setNotes(backupData.notes);
+                        showToast(`成功從 Google Drive 回復 ${backupData.notes.length} 篇筆記！`);
+                    } else {
+                        showToast('雲端備份格式無效');
+                    }
+                } catch (err) {
+                    console.error('Restore Error:', err);
+                    showToast('無法從 Google Drive 下載備份');
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            const handleGoogleDriveSync = () => {
+                if (!accessToken) {
+                    handleGoogleLogin();
+                } else {
+                    syncWithDrive();
+                }
+            };
+
+            // Smart Tab key insertion in Textarea
+            const handleKeyDownTextarea = (e) => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const textarea = textareaRef.current;
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+
+                    const value = textarea.value;
+                    textarea.value = value.substring(0, start) + '  ' + value.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = start + 2;
+
+                    updateActiveNote({ content: textarea.value });
+                }
+            };
+
+            // Collect all unique tags from notes
+            const allTags = React.useMemo(() => {
+                const tagSet = new Set();
+                notes.forEach(note => {
+                    (note.tags || []).forEach(t => tagSet.add(t));
+                });
+                return Array.from(tagSet);
+            }, [notes]);
+
+            const tagTree = React.useMemo(() => buildTagTree(allTags), [allTags]);
+
+            const filteredNotes = notes
+                .filter(note => {
+                    // Tag Filter (matches full path or sub-tag path)
+                    if (selectedTag) {
+                        const noteTags = note.tags || [];
+                        const matchesTag = noteTags.some(t => t === selectedTag || t.startsWith(selectedTag + '/'));
+                        if (!matchesTag) return false;
+                    }
+
+                    // Search Query Filter
+                    if (searchQuery) {
+                        const query = searchQuery.toLowerCase();
+                        return note.title.toLowerCase().includes(query) || note.content.toLowerCase().includes(query);
+                    }
+
+                    return true;
+                })
+                .sort((a, b) => {
+                    if (a.isPinned !== b.isPinned) return b.isPinned ? 1 : -1;
+                    return b.updatedAt - a.updatedAt;
+                });
+
+            // Date Formatting helper
+            const formatDate = (timestamp) => {
+                if (!timestamp) return '';
+                const date = new Date(timestamp);
+                const now = new Date();
+                const isToday = date.toDateString() === now.toDateString();
+                if (isToday) {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+                return date.toLocaleDateString([], { month: 'numeric', day: 'numeric' });
+            };
+
+            // Word / Char count helper
+            const stats = React.useMemo(() => {
+                if (!activeNote || !activeNote.content) return { words: 0, chars: 0 };
+                const text = activeNote.content.trim();
+                const chars = text.length;
+                const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+                return { words, chars };
+            }, [activeNote?.content]);
+
+            const renderedMarkdown = React.useMemo(() => {
+                if (!activeNote || !activeNote.content) return { __html: '<p class="text-slate-400 italic">尚無內容...</p>' };
+                try {
+                    const rawHtml = marked.parse(activeNote.content);
+                    const cleanHtml = DOMPurify.sanitize(rawHtml);
+                    return { __html: cleanHtml };
+                } catch (e) {
+                    return { __html: '<p class="text-red-500">Markdown 解析失敗</p>' };
+                }
+            }, [activeNote?.content]);
+
+            // Recursive Tag Tree Component
+            const renderTagNode = (node) => {
+                const isExpanded = expandedTags[node.fullPath];
+                const isSelected = selectedTag === node.fullPath;
+                const hasChildren = Object.keys(node.children).length > 0;
+
+                const toggleExpand = (e) => {
+                    e.stopPropagation();
+                    setExpandedTags(prev => ({ ...prev, [node.fullPath]: !prev[node.fullPath] }));
+                };
+
+                return (
+                    <div key={node.fullPath} className="ml-2">
+                        <div 
+                            onClick={() => setSelectedTag(isSelected ? null : node.fullPath)}
+                            className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
+                                isSelected 
+                                    ? 'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-semibold' 
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
+                        >
+                            <div className="flex items-center space-x-1.5 truncate">
+                                {hasChildren ? (
+                                    <button onClick={toggleExpand} className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded">
+                                        {isExpanded ? <IconChevronDown /> : <IconChevronRight />}
+                                    </button>
+                                ) : (
+                                    <span className="w-3 text-slate-400"><IconTag /></span>
+                                )}
+                                <span className="truncate">{node.name}</span>
+                            </div>
+                        </div>
+
+                        {hasChildren && isExpanded && (
+                            <div className="border-l border-slate-200 dark:border-slate-800 ml-2">
+                                {Object.values(node.children).map(child => renderTagNode(child))}
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            return (
+                <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100">
+                    
+                    {/* Toast Notification */}
+                    {notification && (
+                        <div className="fixed bottom-5 right-5 z-50 px-4 py-2 bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg shadow-lg text-sm font-medium transition-all transform duration-200">
+                            {notification}
+                        </div>
+                    )}
+
+                    {/* SIDEBAR PANEL */}
+                    {!isZenMode && (
+                        <aside className={`${isSidebarOpen ? 'w-80' : 'w-0'} flex-shrink-0 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 flex flex-col z-20 overflow-hidden relative`}>
+                            
+                            {/* Sidebar Header */}
+                            <div className="p-3 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-7 h-7 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
+                                        Z
+                                    </div>
+                                    <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white">ZenNotes</span>
+                                </div>
+                                
+                                <button 
+                                    onClick={createNewNote} 
+                                    title="新增筆記 (Cmd/Ctrl + N)"
+                                    className="flex items-center space-x-1 px-2.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-md font-medium text-xs shadow-sm transition-colors"
+                                >
+                                    <IconPlus />
+                                    <span>新增筆記</span>
+                                </button>
+                            </div>
+
+                            {/* Search Bar */}
+                            <div className="p-3 pb-2 border-b border-slate-100 dark:border-slate-800/40">
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                                        <IconSearch />
+                                    </span>
+                                    <input
+                                        ref={searchInputRef}
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="搜尋筆記... (/)"
+                                        className="w-full pl-8 pr-7 py-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-md border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-all placeholder-slate-400"
+                                    />
+                                    {searchQuery && (
+                                        <button 
+                                            onClick={() => setSearchQuery('')}
+                                            className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 text-xs"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Gmail-style Hierarchical Tags Section */}
+                            <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/60 max-h-40 overflow-y-auto">
+                                <div className="flex items-center justify-between mb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                    <span>標籤分類 (Tags)</span>
+                                    {selectedTag && (
+                                        <button 
+                                            onClick={() => setSelectedTag(null)} 
+                                            className="text-brand-500 hover:underline normal-case font-normal text-[10px]"
+                                        >
+                                            清除篩選
+                                        </button>
+                                    )}
+                                </div>
+                                
+                                {Object.keys(tagTree).length === 0 ? (
+                                    <div className="text-[11px] text-slate-400 italic">無標籤，可在筆記內新增</div>
+                                ) : (
+                                    Object.values(tagTree).map(node => renderTagNode(node))
+                                )}
+                            </div>
+
+                            {}
+                            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+                                {filteredNotes.length === 0 ? (
+                                    <div className="p-6 text-center text-slate-400 text-xs">
+                                        {searchQuery || selectedTag ? '沒有符合篩選條件的筆記' : '尚無筆記，點擊上方按鈕建立！'}
+                                    </div>
+                                ) : (
+                                    filteredNotes.map(note => {
+                                        const isActive = note.id === activeNoteId;
+                                        return (
+                                            <div
+                                                key={note.id}
+                                                onClick={() => setActiveNoteId(note.id)}
+                                                className={`group relative p-2.5 rounded-lg cursor-pointer transition-all duration-150 border ${
+                                                    isActive 
+                                                        ? 'bg-brand-50 dark:bg-slate-800/90 border-brand-200 dark:border-brand-900/50 shadow-sm' 
+                                                        : 'hover:bg-slate-100 dark:hover:bg-slate-800/40 border-transparent'
+                                                }`}
+                                            >
+                                                <div className="flex items-start justify-between gap-1 mb-1">
+                                                    <h3 className={`font-semibold text-xs truncate ${isActive ? 'text-brand-700 dark:text-brand-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                                                        {note.title || '無標題筆記'}
+                                                    </h3>
+
+                                                    {/* NOTE ACTION BUTTONS: Pin, Download, Delete grouped together */}
+                                                    <div className="flex items-center space-x-1 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                        <button 
+                                                            onClick={(e) => togglePinNote(note.id, e)}
+                                                            title={note.isPinned ? '取消釘選' : '釘選筆記'}
+                                                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400"
+                                                        >
+                                                            <IconPin filled={note.isPinned} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => exportNoteAsMarkdown(note, e)}
+                                                            title="下載為 .md 檔案"
+                                                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-brand-500"
+                                                        >
+                                                            <IconDownload />
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => deleteNote(note.id, e)}
+                                                            title="刪除筆記"
+                                                            className="p-1 hover:bg-red-100 dark:hover:bg-red-950/50 rounded text-slate-400 hover:text-red-500"
+                                                        >
+                                                            <IconTrash />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-1.5 font-normal">
+                                                    {note.content.replace(/[#*`_~-]/g, '').trim() || '空白筆記'}
+                                                </p>
+
+                                                {/* Tags Badges & Date */}
+                                                <div className="flex items-center justify-between text-[10px] text-slate-400">
+                                                    <div className="flex items-center gap-1 overflow-hidden">
+                                                        {(note.tags || []).slice(0, 2).map(tag => (
+                                                            <span key={tag} className="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded text-[9px] truncate max-w-[80px]">
+                                                                #{tag.split('/').pop()}
+                                                            </span>
+                                                        ))}
+                                                        {(note.tags || []).length > 2 && (
+                                                            <span>+{(note.tags || []).length - 2}</span>
+                                                        )}
+                                                    </div>
+                                                    <span>{formatDate(note.updatedAt)}</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            {/* Sidebar Footer */}
+                            <div className="p-2.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
+                                <div className="flex items-center space-x-1">
+                                    <button 
+                                        onClick={() => setIsDarkMode(!isDarkMode)}
+                                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+                                        title={isDarkMode ? "切換亮色模式" : "切換深色模式"}
+                                    >
+                                        {isDarkMode ? <IconSun /> : <IconMoon />}
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowGDriveModal(true)}
+                                        className={`p-1.5 rounded-md transition-colors flex items-center gap-1 ${
+                                            gDriveConfig.connected ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                                        }`}
+                                        title="Google Drive 同步設定"
+                                    >
+                                        <IconCloud />
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowShortcutModal(true)}
+                                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+                                        title="快捷鍵指南"
+                                    >
+                                        <IconKeyboard />
+                                    </button>
+                                </div>
+                                <span className="text-[11px]">{notes.length} 篇筆記</span>
+                            </div>
+                        </aside>
+                    )}
+
+                    {}
+                    <main className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900 relative">
+                        
+                        {/* Top Header Toolbar with Note Title */}
+                        {!isZenMode && (
+                            <header className="h-12 border-b border-slate-200 dark:border-slate-800 px-3 flex items-center justify-between bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-10 gap-2">
+                                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                    <button
+                                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                        className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+                                        title="切換側邊欄"
+                                    >
+                                        <IconSidebar />
+                                    </button>
+                                    <span className="text-slate-300 dark:text-slate-700">|</span>
+
+                                    {/* Note Title Input placed inside Top Toolbar */}
+                                    {activeNote ? (
+                                        <input
+                                            type="text"
+                                            value={activeNote.title}
+                                            onChange={(e) => updateActiveNote({ title: e.target.value })}
+                                            placeholder="筆記名稱..."
+                                            className="flex-1 font-bold text-sm sm:text-base text-slate-900 dark:text-white bg-transparent border-none focus:outline-none placeholder-slate-400 truncate"
+                                        />
+                                    ) : (
+                                        <span className="text-xs text-slate-400">尚無選擇筆記</span>
+                                    )}
+                                </div>
+
+                                {activeNote && (
+                                    <div className="flex items-center space-x-1 flex-shrink-0">
+                                        <span className="hidden md:inline text-[11px] text-slate-400 mr-1">
+                                            {formatDate(activeNote.updatedAt)}
+                                        </span>
+
+                                        {/* View Mode Switcher (Icon Only) */}
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                                            <button
+                                                onClick={() => setViewMode('edit')}
+                                                className={`p-1.5 rounded-md transition-colors ${
+                                                    viewMode === 'edit' 
+                                                        ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm' 
+                                                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                                                }`}
+                                                title="編輯模式"
+                                            >
+                                                <IconEdit />
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode('split')}
+                                                className={`p-1.5 rounded-md transition-colors ${
+                                                    viewMode === 'split' 
+                                                        ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm' 
+                                                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                                                }`}
+                                                title="雙欄模式"
+                                            >
+                                                <IconColumns />
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode('preview')}
+                                                className={`p-1.5 rounded-md transition-colors ${
+                                                    viewMode === 'preview' 
+                                                        ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm' 
+                                                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                                                }`}
+                                                title="預覽模式"
+                                            >
+                                                <IconEye />
+                                            </button>
+                                        </div>
+
+                                        {/* Google Drive Sync Button */}
+                                        <button
+                                            onClick={handleGoogleDriveSync}
+                                            disabled={isSyncing}
+                                            className={`p-1.5 text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors ${
+                                                isSyncing ? 'animate-spin text-brand-500' : ''
+                                            }`}
+                                            title={gDriveConfig.connected ? `同步至 GD (上次: ${gDriveConfig.lastSynced || '未同步'})` : '連線 Google Drive 同步'}
+                                        >
+                                            <IconCloud />
+                                        </button>
+
+                                        {/* Zen Mode Button */}
+                                        <button
+                                            onClick={() => setIsZenMode(true)}
+                                            className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+                                            title="專注模式 (Cmd/Ctrl + Shift + Z)"
+                                        >
+                                            <IconMaximize />
+                                        </button>
+                                    </div>
+                                )}
+                            </header>
+                        )}
+
+                        {/* Zen Mode Exit Float Button */}
+                        {isZenMode && (
+                            <button
+                                onClick={() => setIsZenMode(false)}
+                                className="fixed top-4 right-4 z-50 p-2 bg-slate-800/80 hover:bg-slate-800 text-white rounded-full shadow-lg backdrop-blur transition-all"
+                                title="退出專注模式 (Esc)"
+                            >
+                                <IconMinimize />
+                            </button>
+                        )}
+
+                        {}
+                        {activeNote ? (
+                            <div className="flex-1 flex flex-col h-full overflow-hidden">
+                                
+                                {/* Tag Chips Toolbar inside note body */}
+                                <div className="px-4 pt-3 pb-1 flex items-center flex-wrap gap-1.5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/40 text-xs">
+                                    <span className="text-slate-400 flex items-center gap-1 font-medium text-[11px]">
+                                        <IconTag /> 標籤:
+                                    </span>
+                                    
+                                    {(activeNote.tags || []).map(tag => (
+                                        <span 
+                                            key={tag}
+                                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-xs"
+                                        >
+                                            <span>{tag}</span>
+                                            <button 
+                                                onClick={() => handleRemoveTagFromActiveNote(tag)}
+                                                className="text-slate-400 hover:text-red-500 rounded-full"
+                                            >
+                                                ✕
+                                            </button>
+                                        </span>
+                                    ))}
+
+                                    {showTagAdder ? (
+                                        <div className="inline-flex items-center gap-1">
+                                            <input
+                                                type="text"
+                                                value={newTagInput}
+                                                onChange={(e) => setNewTagInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleAddTagToActiveNote()}
+                                                placeholder="例: 工作/專案A"
+                                                className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-xs rounded border border-brand-500 focus:outline-none w-28"
+                                                autoFocus
+                                            />
+                                            <button 
+                                                onClick={handleAddTagToActiveNote}
+                                                className="px-2 py-0.5 bg-brand-600 text-white text-xs rounded hover:bg-brand-700"
+                                            >
+                                                加入
+                                            </button>
+                                            <button 
+                                                onClick={() => setShowTagAdder(false)}
+                                                className="text-slate-400 hover:text-slate-600 text-xs px-1"
+                                            >
+                                                取消
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setShowTagAdder(true)}
+                                            className="inline-flex items-center gap-0.5 px-2 py-0.5 border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-full text-xs transition-colors"
+                                        >
+                                            <IconPlus /> 標籤
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Main Content Workspace Panel with Padding 4 */}
+                                <div className="flex-1 flex overflow-hidden p-4 gap-4">
+                                    
+                                    {/* Editor Textarea */}
+                                    {(viewMode === 'edit' || viewMode === 'split') && (
+                                        <div className={`flex-1 flex flex-col h-full min-w-0 ${viewMode === 'split' ? 'border-r border-slate-200 dark:border-slate-800 pr-4' : ''}`}>
+                                            <textarea
+                                                ref={textareaRef}
+                                                value={activeNote.content}
+                                                onChange={(e) => updateActiveNote({ content: e.target.value })}
+                                                onKeyDown={handleKeyDownTextarea}
+                                                placeholder="開始使用 Markdown 輸入筆記內容..."
+                                                className="w-full h-full resize-none bg-transparent font-mono text-sm leading-relaxed text-slate-800 dark:text-slate-200 border-none focus:outline-none placeholder-slate-400 selection:bg-brand-500 selection:text-white"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Markdown Preview Rendered */}
+                                    {(viewMode === 'preview' || viewMode === 'split') && (
+                                        <div className="flex-1 h-full overflow-y-auto min-w-0 pr-1">
+                                            <div 
+                                                className="markdown-preview text-slate-800 dark:text-slate-200 text-sm"
+                                                dangerouslySetInnerHTML={renderedMarkdown}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Status Footer Bar */}
+                                {!isZenMode && (
+                                    <div className="h-7 border-t border-slate-100 dark:border-slate-800 px-4 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-900/50">
+                                        <div className="flex items-center space-x-3">
+                                            <span>{stats.words} 字數</span>
+                                            <span>{stats.chars} 字元</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {gDriveConfig.connected && (
+                                                <span className="text-emerald-500 flex items-center gap-1">
+                                                    ● Google Drive 已連線 (appData)
+                                                </span>
+                                            )}
+                                            <span>Markdown 自動儲存</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+                                <p className="mb-4 text-base">目前沒有選擇任何筆記</p>
+                                <button
+                                    onClick={createNewNote}
+                                    className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors shadow-sm"
+                                >
+                                    建立新筆記
+                                </button>
+                            </div>
+                        )}
+                    </main>
+
+                    {}
+                    {/* Google Drive Configuration Modal */}
+                    {showGDriveModal && (
+                        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+                                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                                    <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                                        <IconCloud />
+                                        <span>Google Drive Auth 同步</span>
+                                    </h3>
+                                    <button 
+                                        onClick={() => setShowGDriveModal(false)}
+                                        className="text-slate-400 hover:text-slate-600 text-sm"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+
+                                {}
+                                <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                                    {userInfo ? (
+                                        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                {userInfo.picture ? (
+                                                    <img src={userInfo.picture} alt="Avatar" className="w-8 h-8 rounded-full" />
+                                                ) : (
+                                                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
+                                                        {userInfo.name?.[0] || 'G'}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className="font-semibold text-emerald-900 dark:text-emerald-200">{userInfo.name}</div>
+                                                    <div className="text-[10px] text-emerald-700 dark:text-emerald-400">{userInfo.email}</div>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                onClick={handleGoogleLogout}
+                                                className="px-2.5 py-1 text-[11px] bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 hover:bg-red-200 rounded"
+                                            >
+                                                登出
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="p-3 bg-brand-50 dark:bg-brand-950/40 rounded-lg border border-brand-200 dark:border-brand-900/50">
+                                            <p className="font-semibold text-brand-700 dark:text-brand-300 mb-1">🔒 Google App 專屬空間同步</p>
+                                            <p className="leading-relaxed">
+                                                使用 <code className="bg-white dark:bg-slate-800 px-1 rounded font-mono">appDataFolder</code> 權限，筆記僅會上傳至專屬隔離資料夾，保障隱私與資料安全。
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">
+                                            Google Client ID:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={gDriveConfig.clientId}
+                                            onChange={(e) => setGDriveConfig(prev => ({ ...prev, clientId: e.target.value }))}
+                                            placeholder="請輸入 Google Cloud Console OAuth 2.0 Client ID"
+                                            className="w-full px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-brand-500 text-xs font-mono"
+                                        />
+                                        <p className="text-[10px] text-slate-400 mt-1">
+                                            需至 <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="text-brand-500 underline">Google Cloud Console</a> 建立 OAuth Client ID 並設定 JavaScript 來源。
+                                        </p>
+                                    </div>
+
+                                    {gDriveConfig.lastSynced && (
+                                        <div className="text-[11px] text-slate-400">
+                                            上次同步時間: {gDriveConfig.lastSynced}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="pt-2 flex flex-col gap-2">
+                                    {!accessToken ? (
+                                        <button
+                                            onClick={handleGoogleLogin}
+                                            disabled={isSyncing}
+                                            className="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <IconCloud />
+                                            <span>使用 Google Auth 帳號登入</span>
+                                        </button>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={() => syncWithDrive()}
+                                                disabled={isSyncing}
+                                                className="py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                                            >
+                                                <IconCloud />
+                                                <span>{isSyncing ? '同步中...' : '備份筆記至雲端'}</span>
+                                            </button>
+                                            <button
+                                                onClick={restoreFromDrive}
+                                                disabled={isSyncing}
+                                                className="py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors"
+                                            >
+                                                從雲端下載回復
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={() => setShowGDriveModal(false)}
+                                        className="w-full py-1.5 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 rounded-lg text-xs font-medium transition-colors"
+                                    >
+                                        關閉
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Shortcuts Modal */}
+                    {showShortcutModal && (
+                        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+                                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                                    <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                                        <IconKeyboard />
+                                        <span>鍵盤快捷鍵指南</span>
+                                    </h3>
+                                    <button 
+                                        onClick={() => setShowShortcutModal(false)}
+                                        className="text-slate-400 hover:text-slate-600 text-sm"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+
+                                <div className="space-y-2.5 text-xs">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-600 dark:text-slate-400">建立新筆記</span>
+                                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Cmd/Ctrl + N</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-600 dark:text-slate-400">即時搜尋筆記</span>
+                                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Cmd/Ctrl + F 或 /</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-600 dark:text-slate-400">切換 編輯/雙欄/預覽</span>
+                                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Cmd/Ctrl + E</kbd>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-600 dark:text-slate-400">極簡專注模式 (Zen)</span>
+                                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Cmd/Ctrl + Shift + Z</kbd>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2">
+                                    <button
+                                        onClick={() => setShowShortcutModal(false)}
+                                        className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs font-medium transition-colors"
+                                    >
+                                        確定
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
