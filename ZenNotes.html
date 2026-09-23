@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="h-full">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenNotes - 極簡 Markdown 筆記 (含 Google Drive 同步與層級標籤)</title>
-    <!-- Tailwind CSS -->
+    <title>ZenNotes - 極簡 Markdown 筆記</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -13,29 +13,33 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49'
                         }
                     }
                 }
             }
         }
     </script>
-    <!-- React & ReactDOM -->
+    <!-- React & ReactDOM CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel -->
+    <!-- Babel standalone for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Marked parser for Markdown -->
+    <!-- Marked.js for Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- DOMPurify for security -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <!-- Google Identity Services for Google Drive OAuth -->
+    <!-- DOMPurify for HTML Sanitization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+    <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-
+    
     <style>
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
@@ -56,22 +60,23 @@
         /* Markdown Preview Basic Styling */
         .markdown-preview {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.7;
+            line-height: 1.6;
         }
         .markdown-preview h1 { font-size: 2em; font-weight: 800; border-bottom: 1px solid rgba(156,163,175,0.3); padding-bottom: 0.3em; margin-top: 0.8em; margin-bottom: 0.5em; }
         .markdown-preview h2 { font-size: 1.5em; font-weight: 700; border-bottom: 1px solid rgba(156,163,175,0.2); padding-bottom: 0.3em; margin-top: 0.8em; margin-bottom: 0.4em; }
         .markdown-preview h3 { font-size: 1.25em; font-weight: 600; margin-top: 0.8em; margin-bottom: 0.4em; }
-        .markdown-preview p { margin-bottom: 0.8em; color: inherit; }
+        .markdown-preview p { margin-top: 0; margin-bottom: 1.35rem; color: inherit; line-height: 1.65; }
+        .markdown-preview p:last-child { margin-bottom: 0; }
         .markdown-preview ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 0.8em; }
         .markdown-preview ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 0.8em; }
         .markdown-preview li { margin-bottom: 0.2em; }
-        .markdown-preview blockquote { border-left: 4px solid #3b82f6; padding-left: 1em; margin: 0.8em 0; color: #6b7280; font-style: italic; }
+        .markdown-preview blockquote { border-left: 4px solid #0284c7; padding-left: 1em; margin: 0.8em 0; color: #6b7280; font-style: italic; }
         .dark .markdown-preview blockquote { color: #9ca3af; }
         .markdown-preview code { background-color: rgba(156, 163, 175, 0.2); padding: 0.2em 0.4em; border-radius: 0.25em; font-family: monospace; font-size: 0.9em; }
         .markdown-preview pre { background-color: #1e293b; color: #f8fafc; padding: 1em; border-radius: 0.5em; overflow-x: auto; margin-bottom: 0.8em; }
         .markdown-preview pre code { background-color: transparent; color: inherit; padding: 0; }
-        .markdown-preview a { color: #2563eb; text-decoration: underline; }
-        .dark .markdown-preview a { color: #60a5fa; }
+        .markdown-preview a { color: #0284c7; text-decoration: underline; }
+        .dark .markdown-preview a { color: #38bdf8; }
         .markdown-preview table { width: 100%; border-collapse: collapse; margin-bottom: 0.8em; }
         .markdown-preview th, .markdown-preview td { border: 1px solid rgba(156,163,175,0.3); padding: 0.5em; text-align: left; }
         .markdown-preview th { background-color: rgba(156,163,175,0.1); }
@@ -79,12 +84,10 @@
         .markdown-preview input[type="checkbox"] { margin-right: 0.5em; }
     </style>
 </head>
-<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 antialiased selection:bg-brand-500 selection:text-white">
-
+<body class="h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
     <div id="root" class="h-full"></div>
 
     <script type="text/babel">
-        // Icons
         const IconPlus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>;
         const IconTrash = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>;
         const IconSearch = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>;
@@ -101,73 +104,259 @@
         const IconMinimize = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>;
         const IconTag = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>;
         const IconCloud = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 001-9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>;
-        const IconFolder = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>;
+        const IconLaptop = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>;
         const IconChevronDown = () => <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>;
         const IconChevronRight = () => <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>;
+        const IconDocument = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>;
+        const IconUpload = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>;
+        const IconCopyWorkspace = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>;
+        const IconTextSize = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h10M4 18h6"/></svg>;
+        const IconWidth = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h8m-8 10h8M4 12h16M4 12l3-3m-3 3l3 3m13-3l-3-3m3 3l-3 3"/></svg>;
 
-        const DEFAULT_NOTES = [
+        const HARDCODED_CLIENT_ID = '474647430222-b78vgcdj17obddv4mo8u013q6k4psv20.apps.googleusercontent.com';
+
+        const I18N = {
+            zh: {
+                newNote: '新增筆記',
+                searchPlaceholder: '搜尋筆記... (/)',
+                allNotes: '所有筆記',
+                noTags: '無標籤，可在筆記內新增',
+                noNotesFound: '沒有符合篩選條件的筆記',
+                noNotesYet: '尚無筆記，點擊上方按鈕建立！',
+                editMode: '編輯模式',
+                splitMode: '雙欄對照',
+                previewMode: '預覽 Preview 模式',
+                localWorkspace: '本機工作區',
+                cloudWorkspace: '雲端工作區',
+                copyToCloud: '複製副本至雲端工作區',
+                copyToLocal: '複製副本至本機工作區',
+                copiedToCloud: '已建立副本至雲端工作區！',
+                copiedToLocal: '已建立副本至本機工作區！',
+                switchedToCloud: '已自動切換至雲端工作區',
+                switchedToLocal: '已切換至本機工作區',
+                words: '字數',
+                chars: '字元',
+                tags: '標籤',
+                addTag: '加入',
+                cancel: '取消',
+                tagPlaceholder: '例: 工作/專案A',
+                gDriveTitle: 'Google Drive 雲端工作區',
+                gDriveDesc: '專屬獨立雲端工作區，內容直接儲存於 Google Drive App 空間 (appDataFolder)，與本機工作區互不干涉。',
+                gDriveConnected: 'Google Drive 已連線 (雲端模式)',
+                loginGoogle: '登入 Google Auth 帳號',
+                logout: '登出 Google 帳號',
+                shortcutsTitle: '鍵盤快捷鍵指南',
+                shortcutNewNote: '建立新筆記',
+                shortcutSearch: '即時搜尋筆記',
+                shortcutViewMode: '切換 編輯/雙欄/預覽',
+                shortcutZen: '極簡專注模式 (Zen)',
+                confirm: '確定',
+                noNoteSelected: '目前沒有選擇任何筆記',
+                createNoteBtn: '建立新筆記',
+                importHtml: '匯入 HTML 檔案',
+                htmlImportFail: 'HTML 檔解析失敗',
+                deleted: '已刪除',
+                saved: '已自動儲存至',
+                local: '本機',
+                cloud: '雲端 Drive',
+                switchLang: 'EN',
+                pinNote: '釘選筆記',
+                unpinNote: '取消釘選',
+                downloadMd: '下載為 .md 檔案',
+                deleteNote: '刪除筆記',
+                fontSize: '文字大小',
+                pageWidth: '頁面寬度'
+            },
+            en: {
+                newNote: 'New Note',
+                searchPlaceholder: 'Search notes... (/)',
+                allNotes: 'All Notes',
+                noTags: 'No tags, create inside notes',
+                noNotesFound: 'No notes match search filter',
+                noNotesYet: 'No notes here yet, click above to create!',
+                editMode: 'Edit Mode',
+                splitMode: 'Split View',
+                previewMode: 'Preview Mode',
+                localWorkspace: 'Local Workspace',
+                cloudWorkspace: 'Cloud Workspace',
+                copyToCloud: 'Copy duplicate to Cloud',
+                copyToLocal: 'Copy duplicate to Local',
+                copiedToCloud: 'Copied duplicate to Cloud Workspace!',
+                copiedToLocal: 'Copied duplicate to Local Workspace!',
+                switchedToCloud: 'Switched to Cloud Workspace',
+                switchedToLocal: 'Switched to Local Workspace',
+                words: 'words',
+                chars: 'chars',
+                tags: 'Tags',
+                addTag: 'Add',
+                cancel: 'Cancel',
+                tagPlaceholder: 'e.g. Work/ProjectA',
+                gDriveTitle: 'Google Drive Workspace',
+                gDriveDesc: 'Independent Cloud Workspace stored directly in Google Drive App Folder (appDataFolder), isolated from Local Workspace.',
+                gDriveConnected: 'Google Drive Connected (Cloud Mode)',
+                loginGoogle: 'Sign in with Google',
+                logout: 'Sign Out',
+                shortcutsTitle: 'Keyboard Shortcuts',
+                shortcutNewNote: 'New Note',
+                shortcutSearch: 'Focus Search',
+                shortcutViewMode: 'Toggle Edit / Split / Preview',
+                shortcutZen: 'Zen Focus Mode',
+                confirm: 'OK',
+                noNoteSelected: 'No note selected',
+                createNoteBtn: 'Create New Note',
+                importHtml: 'Import HTML File',
+                htmlImportFail: 'Failed to parse HTML file',
+                deleted: 'Deleted',
+                saved: 'Saved to',
+                local: 'Local',
+                cloud: 'Cloud Drive',
+                switchLang: '繁中',
+                pinNote: 'Pin Note',
+                unpinNote: 'Unpin Note',
+                downloadMd: 'Download .md File',
+                deleteNote: 'Delete Note',
+                fontSize: 'Font Size',
+                pageWidth: 'Page Width'
+            }
+        };
+
+        // Convert HTML string to Markdown
+        const convertHtmlToMarkdown = (htmlString, fileName) => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlString, 'text/html');
+            
+            let title = doc.querySelector('title')?.textContent?.trim() 
+                     || doc.querySelector('h1')?.textContent?.trim() 
+                     || fileName.replace(/\.[^/.]+$/, "") 
+                     || 'Imported HTML Note';
+
+            function parseNode(node) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    return node.textContent.replace(/\s+/g, ' ');
+                }
+                if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+                const tag = node.tagName.toLowerCase();
+                if (['script', 'style', 'head', 'meta', 'link'].includes(tag)) return '';
+
+                // 特殊處理 HTML <table> 轉換為 Markdown 表格語法
+                if (tag === 'table') {
+                    const rows = Array.from(node.querySelectorAll('tr')).filter(tr => tr.closest('table') === node);
+                    if (rows.length === 0) return '';
+
+                    let maxCols = 0;
+                    const rowData = rows.map(tr => {
+                        const cells = Array.from(tr.querySelectorAll('th, td')).filter(cell => cell.closest('tr') === tr);
+                        const cellTexts = cells.map(cell => {
+                            return Array.from(cell.childNodes)
+                                .map(parseNode)
+                                .join('')
+                                .replace(/\s*\n\s*/g, ' ')
+                                .replace(/\|/g, '\\|')
+                                .trim();
+                        });
+                        if (cellTexts.length > maxCols) maxCols = cellTexts.length;
+                        return cellTexts;
+                    });
+
+                    if (maxCols === 0) return '';
+
+                    let mdTable = '\n\n';
+                    // 表頭 (第一列)
+                    const headerCells = rowData[0] || [];
+                    while (headerCells.length < maxCols) headerCells.push('');
+                    mdTable += `| ${headerCells.join(' | ')} |\n`;
+
+                    // 分隔線
+                    const divider = Array(maxCols).fill('---').join(' | ');
+                    mdTable += `| ${divider} |\n`;
+
+                    // 資料列
+                    for (let i = 1; i < rowData.length; i++) {
+                        const row = rowData[i];
+                        while (row.length < maxCols) row.push('');
+                        mdTable += `| ${row.join(' | ')} |\n`;
+                    }
+
+                    return mdTable + '\n\n';
+                }
+
+                let children = Array.from(node.childNodes).map(parseNode).join('');
+
+                switch (tag) {
+                    case 'h1': return `\n# ${children.trim()}\n\n`;
+                    case 'h2': return `\n## ${children.trim()}\n\n`;
+                    case 'h3': return `\n### ${children.trim()}\n\n`;
+                    case 'h4': return `\n#### ${children.trim()}\n\n`;
+                    case 'p': return `\n${children.trim()}\n\n`;
+                    case 'strong': case 'b': return `**${children}**`;
+                    case 'em': case 'i': return `*${children}*`;
+                    case 'code': return `\`${children}\``;
+                    case 'pre': return `\n\`\`\`\n${node.textContent.trim()}\n\`\`\`\n\n`;
+                    case 'a': return `[${children.trim() || 'Link'}](${node.getAttribute('href') || '#'})`;
+                    case 'li': return `- ${children.trim()}\n`;
+                    case 'ul': case 'ol': return `\n${children}\n`;
+                    case 'blockquote': return `\n> ${children.trim()}\n\n`;
+                    case 'hr': return `\n---\n\n`;
+                    case 'br': return `\n`;
+                    default: return children;
+                }
+            }
+
+            const markdown = parseNode(doc.body || doc.documentElement)
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+
+            return { title, content: markdown };
+        };
+
+        const DEFAULT_LOCAL_NOTES = [
             {
-                id: 'welcome-note',
-                title: '歡迎使用 ZenNotes 👋',
-                content: `# 歡迎使用 ZenNotes 極簡筆記！
+                id: 'local-welcome-note',
+                title: '歡迎使用 ZenNotes (本機工作區) 👋',
+                content: `# 歡迎使用 ZenNotes 本機工作區！
 
-這是一個專為高效率寫作與專注思考設計的 **Markdown 筆記應用程式**。
+這是儲存於瀏覽器內部的 **本機工作區**。
 
----
+### 🌟 獨立雙工作區架構
 
-### 🌟 核心特色
+- **💻 本機工作區**：資料完全存在您的本機裝置，無網路需求。
+- **☁️ 雲端工作區**：登入 Google Drive 後自動開啟，所有筆記修改直接即時同步至雲端 AppData 空間。
 
-1. **頂部標題工具列**：讓寫作視窗更潔淨、專注。
-2. **階層標籤分類 (Gmail Style Tag/Sub-tag)**：支援例如 \`工作/專案A\`、\`個人/財務\` 的子標籤結構。
-3. **Google Drive 同步**：安全連線至 Google Drive 的專屬 App 空間 (\`appDataFolder\`)，不影響其他雲端檔案。
-4. **鍵盤友善與雙欄預覽**：提供快顯快捷鍵與即時 Markdown 渲染。
-
----
-
-### ⌨️ 常用快捷鍵指南
-
-- \`Cmd / Ctrl + N\` : 建立新筆記
-- \`Cmd / Ctrl + F\` 或 \`/\` : 聚焦搜尋欄
-- \`Cmd / Ctrl + E\` : 切換編輯 / 預覽 / 雙欄模式
-- \`Cmd / Ctrl + Shift + Z\` : 切換極簡專注模式
-
-祝您寫作愉快！`,
+### ↔️ 筆記副本複製
+點選筆記卡片上的 **[複製副本]** 按鈕，即可隨時將本機筆記複製到雲端，或將雲端筆記備份至本機！`,
                 tags: ['工作/專案A', '教學'],
                 isPinned: true,
                 createdAt: Date.now() - 3600000,
                 updatedAt: Date.now() - 1800000,
-            },
-            {
-                id: 'markdown-cheat-sheet',
-                title: 'Markdown 快速速查表 📑',
-                content: `# Markdown 速查表
-
-## 標題
-# H1 標題
-## H2 標題
-
-## 文字格式
-*斜體* 或 _斜體_
-**粗體** 或 __粗體__
-
-## 階層標籤範例
-- 標籤可以用斜線分類：\`工作/專案B\`、\`學習/前端\`
-- 在左側選單點擊父標籤可展開子標籤`,
-                tags: ['學習/Markdown', '工作/速查表'],
-                isPinned: false,
-                createdAt: Date.now() - 86400000,
-                updatedAt: Date.now() - 43200000,
             }
         ];
 
-        // Build nested tag tree from flat tag list (e.g., ["工作/專案A", "工作/專案B", "個人"])
+        const DEFAULT_CLOUD_NOTES = [
+            {
+                id: 'cloud-welcome-note',
+                title: '歡迎使用 雲端工作區 ☁️',
+                content: `# 雲端工作區 (Google Drive)
+
+這是在 Google Drive \`appDataFolder\` 內的 **雲端專屬工作區**！
+
+- 在此工作區修改、新增或刪除的筆記，都會直接同步至 Google 雲端硬碟。
+- 點擊左下方切換鈕可隨時切換回「本機工作區」。`,
+                tags: ['雲端', 'GoogleDrive'],
+                isPinned: true,
+                createdAt: Date.now() - 1200000,
+                updatedAt: Date.now() - 600000,
+            }
+        ];
+
+        // Build nested tag tree from flat tag list
         const buildTagTree = (tagList) => {
             const root = {};
             tagList.forEach(tag => {
                 const parts = tag.split('/');
                 let current = root;
                 let fullPath = '';
-                parts.forEach((part, index) => {
+                parts.forEach((part) => {
                     fullPath = fullPath ? `${fullPath}/${part}` : part;
                     if (!current[part]) {
                         current[part] = {
@@ -183,22 +372,72 @@
         };
 
         function App() {
-            const [notes, setNotes] = React.useState(() => {
-                const saved = localStorage.getItem('zen_notes_data');
-                if (saved) {
-                    try { return JSON.parse(saved); } catch (e) { console.error(e); }
-                }
-                return DEFAULT_NOTES;
+            // Language State: 'zh' | 'en'
+            const [lang, setLang] = React.useState(() => {
+                return localStorage.getItem('zen_notes_lang') || 'zh';
+            });
+            const t = I18N[lang] || I18N.zh;
+
+            // Workspace State: 'local' | 'cloud'
+            const [workspace, setWorkspace] = React.useState('local');
+
+            // Text Size State: 'sm' | 'base' | 'lg' | 'xl'
+            const [fontSize, setFontSize] = React.useState(() => {
+                return localStorage.getItem('zen_notes_font_size') || 'base';
             });
 
-            const [activeNoteId, setActiveNoteId] = React.useState(() => {
-                const savedId = localStorage.getItem('zen_notes_active_id');
-                return savedId && notes.some(n => n.id === savedId) ? savedId : (notes[0]?.id || null);
+            // Content Width State: 'narrow' | 'normal' | 'wide' | 'full'
+            const [contentWidth, setContentWidth] = React.useState(() => {
+                return localStorage.getItem('zen_notes_content_width') || 'normal';
             });
+
+            // Notes State for both Workspaces
+            const [localNotes, setLocalNotes] = React.useState(() => {
+                const saved = localStorage.getItem('zen_notes_local_data');
+                if (saved) {
+                    try { return JSON.parse(saved); } catch (e) {}
+                }
+                return DEFAULT_LOCAL_NOTES;
+            });
+
+            const [cloudNotes, setCloudNotes] = React.useState(() => {
+                const saved = localStorage.getItem('zen_notes_cloud_data');
+                if (saved) {
+                    try { return JSON.parse(saved); } catch (e) {}
+                }
+                return DEFAULT_CLOUD_NOTES;
+            });
+
+            // Active note IDs for each workspace
+            const [activeLocalNoteId, setActiveLocalNoteId] = React.useState(() => localNotes[0]?.id || null);
+            const [activeCloudNoteId, setActiveCloudNoteId] = React.useState(() => cloudNotes[0]?.id || null);
+
+            // Active notes getter/setter
+            const currentNotes = workspace === 'local' ? localNotes : cloudNotes;
+            const activeNoteId = workspace === 'local' ? activeLocalNoteId : activeCloudNoteId;
+
+            const setActiveNoteId = (id) => {
+                if (workspace === 'local') setActiveLocalNoteId(id);
+                else setActiveCloudNoteId(id);
+            };
+
+            const setNotes = (updater) => {
+                if (workspace === 'local') {
+                    setLocalNotes(prev => typeof updater === 'function' ? updater(prev) : updater);
+                } else {
+                    setCloudNotes(prev => {
+                        const nextCloudNotes = typeof updater === 'function' ? updater(prev) : updater;
+                        if (accessToken) {
+                            saveCloudNotesToDrive(nextCloudNotes, accessToken);
+                        }
+                        return nextCloudNotes;
+                    });
+                }
+            };
 
             const [searchQuery, setSearchQuery] = React.useState('');
-            const [selectedTag, setSelectedTag] = React.useState(null); // Filter by full path e.g. "工作" or "工作/專案A"
-            const [expandedTags, setExpandedTags] = React.useState({ '工作': true, '學習': true });
+            const [selectedTag, setSelectedTag] = React.useState(null);
+            const [expandedTags, setExpandedTags] = React.useState({});
             const [viewMode, setViewMode] = React.useState('split'); // 'edit', 'preview', 'split'
             const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
             const [isDarkMode, setIsDarkMode] = React.useState(() => {
@@ -210,15 +449,10 @@
             const [showGDriveModal, setShowGDriveModal] = React.useState(false);
             const [notification, setNotification] = React.useState(null);
 
-            // Tag input state for current active note
             const [newTagInput, setNewTagInput] = React.useState('');
             const [showTagAdder, setShowTagAdder] = React.useState(false);
 
-            // Google Drive Sync State
-            const [gDriveConfig, setGDriveConfig] = React.useState(() => {
-                const savedConfig = localStorage.getItem('zen_notes_gdrive_config');
-                return savedConfig ? JSON.parse(savedConfig) : { clientId: '', connected: false, autoSync: false, lastSynced: null, userEmail: null };
-            });
+            // Google Auth & Sync State
             const [accessToken, setAccessToken] = React.useState(null);
             const [userInfo, setUserInfo] = React.useState(null);
             const [isSyncing, setIsSyncing] = React.useState(false);
@@ -226,24 +460,27 @@
             const searchInputRef = React.useRef(null);
             const textareaRef = React.useRef(null);
 
-            // Sync notes to LocalStorage
+            // LocalStorage Persistence Effects
             React.useEffect(() => {
-                localStorage.setItem('zen_notes_data', JSON.stringify(notes));
-            }, [notes]);
+                localStorage.setItem('zen_notes_lang', lang);
+            }, [lang]);
 
-            // Sync active ID to LocalStorage
             React.useEffect(() => {
-                if (activeNoteId) {
-                    localStorage.setItem('zen_notes_active_id', activeNoteId);
-                }
-            }, [activeNoteId]);
+                localStorage.setItem('zen_notes_font_size', fontSize);
+            }, [fontSize]);
 
-            // Save GDrive Config
             React.useEffect(() => {
-                localStorage.setItem('zen_notes_gdrive_config', JSON.stringify(gDriveConfig));
-            }, [gDriveConfig]);
+                localStorage.setItem('zen_notes_content_width', contentWidth);
+            }, [contentWidth]);
 
-            // Dark Mode Class Handling
+            React.useEffect(() => {
+                localStorage.setItem('zen_notes_local_data', JSON.stringify(localNotes));
+            }, [localNotes]);
+
+            React.useEffect(() => {
+                localStorage.setItem('zen_notes_cloud_data', JSON.stringify(cloudNotes));
+            }, [cloudNotes]);
+
             React.useEffect(() => {
                 if (isDarkMode) {
                     document.documentElement.classList.add('dark');
@@ -259,6 +496,7 @@
                 setTimeout(() => setNotification(null), 2500);
             };
 
+            // Keyboard Shortcuts
             React.useEffect(() => {
                 const handleKeyDown = (e) => {
                     const isMod = e.metaKey || e.ctrlKey;
@@ -278,7 +516,6 @@
                     else if (isMod && e.shiftKey && e.key.toLowerCase() === 'z') {
                         e.preventDefault();
                         setIsZenMode(prev => !prev);
-                        showToast(!isZenMode ? '已開啟專注模式 (Esc 退出)' : '已退出專注模式');
                     }
                     else if (e.key === 'Escape') {
                         if (isZenMode) setIsZenMode(false);
@@ -289,14 +526,14 @@
 
                 window.addEventListener('keydown', handleKeyDown);
                 return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [isZenMode, showShortcutModal, showGDriveModal]);
+            }, [isZenMode, showShortcutModal, showGDriveModal, workspace, localNotes, cloudNotes]);
 
-            const activeNote = notes.find(n => n.id === activeNoteId) || notes[0];
+            const activeNote = currentNotes.find(n => n.id === activeNoteId) || currentNotes[0];
 
             const createNewNote = () => {
                 const newNote = {
                     id: 'note-' + Date.now(),
-                    title: '未命名筆記',
+                    title: t.newNote,
                     content: '',
                     tags: selectedTag ? [selectedTag] : [],
                     isPinned: false,
@@ -305,7 +542,7 @@
                 };
                 setNotes(prev => [newNote, ...prev]);
                 setActiveNoteId(newNote.id);
-                showToast('已建立新筆記');
+                showToast(`${t.newNote} (${workspace === 'local' ? t.local : t.cloud})`);
                 setTimeout(() => {
                     if (textareaRef.current) textareaRef.current.focus();
                 }, 100);
@@ -327,16 +564,16 @@
 
             const deleteNote = (id, e) => {
                 if (e) e.stopPropagation();
-                const targetNote = notes.find(n => n.id === id);
+                const targetNote = currentNotes.find(n => n.id === id);
                 if (!targetNote) return;
 
-                const filtered = notes.filter(n => n.id !== id);
+                const filtered = currentNotes.filter(n => n.id !== id);
                 setNotes(filtered);
-                
+
                 if (activeNoteId === id) {
                     setActiveNoteId(filtered[0]?.id || null);
                 }
-                showToast(`已刪除：「${targetNote.title || '筆記'}」`);
+                showToast(`${t.deleted}：「${targetNote.title || 'Note'}」`);
             };
 
             const togglePinNote = (id, e) => {
@@ -357,17 +594,38 @@
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                showToast(`已匯出：「${note.title}.md」`);
             };
 
-            // Tag Management
+            const copyNoteToOtherWorkspace = (noteToCopy, e) => {
+                if (e) e.stopPropagation();
+                const targetWorkspace = workspace === 'local' ? 'cloud' : 'local';
+                const duplicatedNote = {
+                    ...noteToCopy,
+                    id: 'note-' + Date.now(),
+                    title: `${noteToCopy.title || 'Untitled'} (${workspace === 'local' ? 'Cloud Copy' : 'Local Copy'})`,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
+                };
+
+                if (targetWorkspace === 'cloud') {
+                    const nextCloudNotes = [duplicatedNote, ...cloudNotes];
+                    setCloudNotes(nextCloudNotes);
+                    if (accessToken) {
+                        saveCloudNotesToDrive(nextCloudNotes, accessToken);
+                    }
+                    showToast(t.copiedToCloud);
+                } else {
+                    setLocalNotes(prev => [duplicatedNote, ...prev]);
+                    showToast(t.copiedToLocal);
+                }
+            };
+
             const handleAddTagToActiveNote = () => {
                 if (!newTagInput.trim() || !activeNote) return;
                 const cleanTag = newTagInput.trim().replace(/^\/+|\/+$/g, '');
                 const currentTags = activeNote.tags || [];
                 if (!currentTags.includes(cleanTag)) {
                     updateActiveNote({ tags: [...currentTags, cleanTag] });
-                    showToast(`已新增標籤：${cleanTag}`);
                 }
                 setNewTagInput('');
                 setShowTagAdder(false);
@@ -377,87 +635,43 @@
                 if (!activeNote) return;
                 const updatedTags = (activeNote.tags || []).filter(t => t !== tagToRemove);
                 updateActiveNote({ tags: updatedTags });
-                showToast(`已移除標籤：${tagToRemove}`);
             };
 
-            // Google OAuth2 Login using Google Identity Services
-            const handleGoogleLogin = () => {
-                if (!gDriveConfig.clientId || !gDriveConfig.clientId.trim()) {
-                    setShowGDriveModal(true);
-                    showToast('請先設定您的 Google Client ID');
-                    return;
-                }
+            const handleImportHtml = (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
 
-                if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
-                    showToast('Google API 載入中，請稍後再試');
-                    return;
-                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const htmlContent = e.target.result;
+                        const { title, content } = convertHtmlToMarkdown(htmlContent, file.name);
 
-                try {
-                    const client = window.google.accounts.oauth2.initTokenClient({
-                        client_id: gDriveConfig.clientId.trim(),
-                        scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                        callback: async (response) => {
-                            if (response.error) {
-                                console.error('OAuth Error:', response);
-                                showToast(`登入失敗: ${response.error_description || response.error}`);
-                                return;
-                            }
-                            if (response.access_token) {
-                                setAccessToken(response.access_token);
-                                await fetchUserProfile(response.access_token);
-                                showToast('Google 帳號登入成功！');
-                                syncWithDrive(response.access_token);
-                            }
-                        }
-                    });
-                    client.requestAccessToken();
-                } catch (err) {
-                    console.error('Google Auth Init Error:', err);
-                    showToast('Google Auth 初始化失敗，請確認 Client ID 格式');
-                }
-            };
+                        const newNote = {
+                            id: 'note-' + Date.now(),
+                            title: title,
+                            content: content,
+                            tags: selectedTag ? [selectedTag] : ['HTML Import'],
+                            isPinned: false,
+                            createdAt: Date.now(),
+                            updatedAt: Date.now(),
+                        };
 
-            // Fetch Logged-in Google User Profile
-            const fetchUserProfile = async (token) => {
-                try {
-                    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    if (res.ok) {
-                        const info = await res.json();
-                        setUserInfo({ name: info.name, email: info.email, picture: info.picture });
-                        setGDriveConfig(prev => ({ ...prev, connected: true, userEmail: info.email }));
+                        setNotes(prev => [newNote, ...prev]);
+                        setActiveNoteId(newNote.id);
+                        showToast(`Imported: "${title}"`);
+                    } catch (err) {
+                        showToast(t.htmlImportFail);
                     }
-                } catch (e) {
-                    console.error('Fetch Profile Error:', e);
-                }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
             };
 
-            // Logout Google Account
-            const handleGoogleLogout = () => {
-                if (accessToken && window.google?.accounts?.oauth2) {
-                    window.google.accounts.oauth2.revoke(accessToken, () => {});
-                }
-                setAccessToken(null);
-                setUserInfo(null);
-                setGDriveConfig(prev => ({ ...prev, connected: false, userEmail: null }));
-                showToast('已登出 Google 帳號');
-            };
-
-            // Upload / Sync Notes to Google Drive appDataFolder
-            const syncWithDrive = async (overrideToken = null) => {
-                const token = overrideToken || accessToken;
-                if (!token) {
-                    handleGoogleLogin();
-                    return;
-                }
-
+            const saveCloudNotesToDrive = async (notesToSave, token) => {
+                if (!token) return;
                 setIsSyncing(true);
-                showToast('正在備份至 Google Drive App 空間...');
-
                 try {
-                    // 1. Search existing backup file in appDataFolder
                     const listRes = await fetch(
                         "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='zen_notes_backup.json'+and+'appDataFolder'+in+parents",
                         { headers: { Authorization: `Bearer ${token}` } }
@@ -467,13 +681,12 @@
 
                     const backupPayload = JSON.stringify({
                         appName: "ZenNotes",
-                        version: "1.0",
+                        version: "2.0",
                         updatedAt: Date.now(),
-                        notes: notes
+                        notes: notesToSave
                     }, null, 2);
 
                     if (existingFile) {
-                        // Patch existing file
                         await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=multipart`, {
                             method: 'PATCH',
                             headers: {
@@ -483,7 +696,6 @@
                             body: `--zen_notes_boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: 'zen_notes_backup.json' })}\r\n--zen_notes_boundary\r\nContent-Type: application/json\r\n\r\n${backupPayload}\r\n--zen_notes_boundary--`
                         });
                     } else {
-                        // Create new file
                         const metadata = {
                             name: 'zen_notes_backup.json',
                             mimeType: 'application/json',
@@ -498,109 +710,139 @@
                             body: `--zen_notes_boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--zen_notes_boundary\r\nContent-Type: application/json\r\n\r\n${backupPayload}\r\n--zen_notes_boundary--`
                         });
                     }
-
-                    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    setGDriveConfig(prev => ({ ...prev, connected: true, lastSynced: timestamp }));
-                    showToast(`同步成功！已儲存至 Google Drive (${timestamp})`);
                 } catch (err) {
-                    console.error('Drive Sync Error:', err);
-                    showToast('同步失敗，請重新登入 Google 帳號');
+                    console.error('Google Drive sync error', err);
                 } finally {
                     setIsSyncing(false);
                 }
             };
 
-            // Download / Restore Notes from Google Drive appDataFolder
-            const restoreFromDrive = async () => {
-                if (!accessToken) {
-                    showToast('請先進行 Google Auth 登入');
-                    return;
-                }
-
+            const fetchCloudNotesFromDrive = async (token) => {
                 setIsSyncing(true);
                 try {
                     const listRes = await fetch(
                         "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='zen_notes_backup.json'+and+'appDataFolder'+in+parents",
-                        { headers: { Authorization: `Bearer ${accessToken}` } }
+                        { headers: { Authorization: `Bearer ${token}` } }
                     );
                     const listData = await listRes.json();
                     const existingFile = listData.files && listData.files[0];
 
-                    if (!existingFile) {
-                        showToast('雲端 App 空間中尚無備份檔案');
-                        setIsSyncing(false);
-                        return;
-                    }
-
-                    const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`, {
-                        headers: { Authorization: `Bearer ${accessToken}` }
-                    });
-                    const backupData = await fileRes.json();
-
-                    if (backupData && Array.isArray(backupData.notes)) {
-                        setNotes(backupData.notes);
-                        showToast(`成功從 Google Drive 回復 ${backupData.notes.length} 篇筆記！`);
+                    if (existingFile) {
+                        const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        const backupData = await fileRes.json();
+                        if (backupData && Array.isArray(backupData.notes) && backupData.notes.length > 0) {
+                            setCloudNotes(backupData.notes);
+                            setActiveCloudNoteId(backupData.notes[0]?.id || null);
+                        }
                     } else {
-                        showToast('雲端備份格式無效');
+                        // First time connect: initialize cloud notes with default
+                        saveCloudNotesToDrive(cloudNotes, token);
                     }
                 } catch (err) {
-                    console.error('Restore Error:', err);
-                    showToast('無法從 Google Drive 下載備份');
+                    console.error('Fetch cloud notes failed', err);
                 } finally {
                     setIsSyncing(false);
                 }
             };
 
-            const handleGoogleDriveSync = () => {
-                if (!accessToken) {
-                    handleGoogleLogin();
-                } else {
-                    syncWithDrive();
+            const handleGoogleLogin = () => {
+                if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+                    showToast('Google API 載入中，請稍後再試');
+                    return;
+                }
+
+                try {
+                    const client = window.google.accounts.oauth2.initTokenClient({
+                        client_id: HARDCODED_CLIENT_ID,
+                        scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                        callback: async (response) => {
+                            if (response.error) {
+                                showToast(`Login failed: ${response.error}`);
+                                return;
+                            }
+                            if (response.access_token) {
+                                setAccessToken(response.access_token);
+                                await fetchUserProfile(response.access_token);
+                                await fetchCloudNotesFromDrive(response.access_token);
+                                setWorkspace('cloud');
+                                showToast(t.switchedToCloud);
+                                setShowGDriveModal(false);
+                            }
+                        }
+                    });
+                    client.requestAccessToken();
+                } catch (err) {
+                    showToast('Google Auth Initializing Error');
                 }
             };
 
-            // Smart Tab key insertion in Textarea
+            const fetchUserProfile = async (token) => {
+                try {
+                    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const info = await res.json();
+                        setUserInfo({ name: info.name, email: info.email, picture: info.picture });
+                    }
+                } catch (e) {}
+            };
+
+            const handleGoogleLogout = () => {
+                if (accessToken && window.google?.accounts?.oauth2) {
+                    window.google.accounts.oauth2.revoke(accessToken, () => {});
+                }
+                setAccessToken(null);
+                setUserInfo(null);
+                setWorkspace('local');
+                showToast(t.switchedToLocal);
+            };
+
+            const switchWorkspace = (targetWorkspace) => {
+                if (targetWorkspace === 'cloud' && !accessToken) {
+                    setShowGDriveModal(true);
+                    return;
+                }
+                setWorkspace(targetWorkspace);
+                showToast(targetWorkspace === 'cloud' ? t.switchedToCloud : t.switchedToLocal);
+            };
+
             const handleKeyDownTextarea = (e) => {
                 if (e.key === 'Tab') {
                     e.preventDefault();
                     const textarea = textareaRef.current;
                     const start = textarea.selectionStart;
                     const end = textarea.selectionEnd;
-
                     const value = textarea.value;
                     textarea.value = value.substring(0, start) + '  ' + value.substring(end);
                     textarea.selectionStart = textarea.selectionEnd = start + 2;
-
                     updateActiveNote({ content: textarea.value });
                 }
             };
 
-            // Collect all unique tags from notes
             const allTags = React.useMemo(() => {
                 const tagSet = new Set();
-                notes.forEach(note => {
+                currentNotes.forEach(note => {
                     (note.tags || []).forEach(t => tagSet.add(t));
                 });
                 return Array.from(tagSet);
-            }, [notes]);
+            }, [currentNotes]);
 
             const tagTree = React.useMemo(() => buildTagTree(allTags), [allTags]);
 
-            const filteredNotes = notes
+            const filteredNotes = currentNotes
                 .filter(note => {
-                    // Tag Filter (matches full path or sub-tag path)
                     if (selectedTag) {
                         const noteTags = note.tags || [];
                         const matchesTag = noteTags.some(t => t === selectedTag || t.startsWith(selectedTag + '/'));
                         if (!matchesTag) return false;
                     }
-
-                    // Search Query Filter
                     if (searchQuery) {
                         const query = searchQuery.toLowerCase();
                         return note.title.toLowerCase().includes(query) || note.content.toLowerCase().includes(query);
                     }
-
                     return true;
                 })
                 .sort((a, b) => {
@@ -608,7 +850,6 @@
                     return b.updatedAt - a.updatedAt;
                 });
 
-            // Date Formatting helper
             const formatDate = (timestamp) => {
                 if (!timestamp) return '';
                 const date = new Date(timestamp);
@@ -620,7 +861,6 @@
                 return date.toLocaleDateString([], { month: 'numeric', day: 'numeric' });
             };
 
-            // Word / Char count helper
             const stats = React.useMemo(() => {
                 if (!activeNote || !activeNote.content) return { words: 0, chars: 0 };
                 const text = activeNote.content.trim();
@@ -630,17 +870,40 @@
             }, [activeNote?.content]);
 
             const renderedMarkdown = React.useMemo(() => {
-                if (!activeNote || !activeNote.content) return { __html: '<p class="text-slate-400 italic">尚無內容...</p>' };
+                if (!activeNote || !activeNote.content) return { __html: '<p class="text-slate-400 italic">No content...</p>' };
                 try {
-                    const rawHtml = marked.parse(activeNote.content);
-                    const cleanHtml = DOMPurify.sanitize(rawHtml);
+                    if (window.marked) {
+                        window.marked.setOptions({
+                            breaks: true,
+                            gfm: true
+                        });
+                    }
+
+                    const normalized = activeNote.content.replace(/\r\n/g, '\n');
+                    const rawHtml = window.marked ? window.marked.parse(normalized) : normalized;
+                    const cleanHtml = window.DOMPurify ? window.DOMPurify.sanitize(rawHtml) : rawHtml;
                     return { __html: cleanHtml };
                 } catch (e) {
-                    return { __html: '<p class="text-red-500">Markdown 解析失敗</p>' };
+                    return { __html: '<p class="text-red-500">Markdown Parse Error</p>' };
                 }
             }, [activeNote?.content]);
 
-            // Recursive Tag Tree Component
+            // Font size helper mapping
+            const fontSizeClassMap = {
+                sm: 'text-xs',
+                base: 'text-sm',
+                lg: 'text-base',
+                xl: 'text-lg'
+            };
+
+            // Content width helper mapping
+            const contentWidthClassMap = {
+                narrow: 'max-w-2xl',
+                normal: 'max-w-4xl',
+                wide: 'max-w-6xl',
+                full: 'max-w-full'
+            };
+
             const renderTagNode = (node) => {
                 const isExpanded = expandedTags[node.fullPath];
                 const isSelected = selectedTag === node.fullPath;
@@ -684,7 +947,7 @@
 
             return (
                 <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100">
-                    
+
                     {/* Toast Notification */}
                     {notification && (
                         <div className="fixed bottom-5 right-5 z-50 px-4 py-2 bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg shadow-lg text-sm font-medium transition-all transform duration-200">
@@ -695,7 +958,7 @@
                     {/* SIDEBAR PANEL */}
                     {!isZenMode && (
                         <aside className={`${isSidebarOpen ? 'w-80' : 'w-0'} flex-shrink-0 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 flex flex-col z-20 overflow-hidden relative`}>
-                            
+
                             {/* Sidebar Header */}
                             <div className="p-3 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
@@ -704,14 +967,52 @@
                                     </div>
                                     <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white">ZenNotes</span>
                                 </div>
-                                
-                                <button 
-                                    onClick={createNewNote} 
-                                    title="新增筆記 (Cmd/Ctrl + N)"
-                                    className="flex items-center space-x-1 px-2.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-md font-medium text-xs shadow-sm transition-colors"
+
+                                <div className="flex items-center space-x-1">
+                                    <label title={t.importHtml} className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-md cursor-pointer transition-colors">
+                                        <IconUpload />
+                                        <input
+                                            type="file"
+                                            accept=".html,.htm"
+                                            onChange={handleImportHtml}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                    <button 
+                                        onClick={createNewNote} 
+                                        title={`${t.newNote} (Cmd/Ctrl + N)`}
+                                        className="flex items-center space-x-1 px-2.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-md font-medium text-xs shadow-sm transition-colors"
+                                    >
+                                        <IconPlus />
+                                        <span>{t.newNote}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Workspace Switcher Tabs */}
+                            <div className="px-3 pt-2.5 pb-1 flex gap-1">
+                                <button
+                                    onClick={() => switchWorkspace('local')}
+                                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                                        workspace === 'local'
+                                            ? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900 shadow-sm'
+                                            : 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                                    }`}
                                 >
-                                    <IconPlus />
-                                    <span>新增筆記</span>
+                                    <IconLaptop />
+                                    <span>{t.localWorkspace}</span>
+                                </button>
+                                <button
+                                    onClick={() => switchWorkspace('cloud')}
+                                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                                        workspace === 'cloud'
+                                            ? 'bg-brand-600 text-white shadow-sm'
+                                            : 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <IconCloud />
+                                    <span>{t.cloudWorkspace}</span>
+                                    {accessToken && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>}
                                 </button>
                             </div>
 
@@ -726,7 +1027,7 @@
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="搜尋筆記... (/)"
+                                        placeholder={t.searchPlaceholder}
                                         className="w-full pl-8 pr-7 py-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-md border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-all placeholder-slate-400"
                                     />
                                     {searchQuery && (
@@ -740,32 +1041,43 @@
                                 </div>
                             </div>
 
-                            {/* Gmail-style Hierarchical Tags Section */}
-                            <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/60 max-h-40 overflow-y-auto">
-                                <div className="flex items-center justify-between mb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                                    <span>標籤分類 (Tags)</span>
-                                    {selectedTag && (
-                                        <button 
-                                            onClick={() => setSelectedTag(null)} 
-                                            className="text-brand-500 hover:underline normal-case font-normal text-[10px]"
-                                        >
-                                            清除篩選
-                                        </button>
+                            {/* Tree Navigation Section */}
+                            <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/60 max-h-44 overflow-y-auto">
+                                <div 
+                                    onClick={() => { setSelectedTag(null); setSearchQuery(''); }}
+                                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs cursor-pointer transition-colors mb-1 ${
+                                        selectedTag === null && searchQuery === ''
+                                            ? 'bg-brand-600 text-white font-semibold shadow-sm'
+                                            : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
+                                    }`}
+                                >
+                                    <div className="flex items-center space-x-2 truncate">
+                                        <IconDocument />
+                                        <span className="truncate">{t.allNotes}</span>
+                                    </div>
+                                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                                        selectedTag === null && searchQuery === ''
+                                            ? 'bg-white/20 text-white'
+                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                                    }`}>
+                                        {currentNotes.length}
+                                    </span>
+                                </div>
+
+                                <div className="pl-1 border-l border-slate-200 dark:border-slate-800 ml-3 space-y-0.5">
+                                    {Object.keys(tagTree).length === 0 ? (
+                                        <div className="text-[11px] text-slate-400 italic py-1 pl-2">{t.noTags}</div>
+                                    ) : (
+                                        Object.values(tagTree).map(node => renderTagNode(node))
                                     )}
                                 </div>
-                                
-                                {Object.keys(tagTree).length === 0 ? (
-                                    <div className="text-[11px] text-slate-400 italic">無標籤，可在筆記內新增</div>
-                                ) : (
-                                    Object.values(tagTree).map(node => renderTagNode(node))
-                                )}
                             </div>
 
-                            {}
+                            {/* Note List */}
                             <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
                                 {filteredNotes.length === 0 ? (
                                     <div className="p-6 text-center text-slate-400 text-xs">
-                                        {searchQuery || selectedTag ? '沒有符合篩選條件的筆記' : '尚無筆記，點擊上方按鈕建立！'}
+                                        {searchQuery || selectedTag ? t.noNotesFound : t.noNotesYet}
                                     </div>
                                 ) : (
                                     filteredNotes.map(note => {
@@ -782,28 +1094,35 @@
                                             >
                                                 <div className="flex items-start justify-between gap-1 mb-1">
                                                     <h3 className={`font-semibold text-xs truncate ${isActive ? 'text-brand-700 dark:text-brand-400' : 'text-slate-800 dark:text-slate-200'}`}>
-                                                        {note.title || '無標題筆記'}
+                                                        {note.title || 'Untitled Note'}
                                                     </h3>
 
-                                                    {/* NOTE ACTION BUTTONS: Pin, Download, Delete grouped together */}
                                                     <div className="flex items-center space-x-1 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                        {/* Duplicate note to other workspace */}
+                                                        <button
+                                                            onClick={(e) => copyNoteToOtherWorkspace(note, e)}
+                                                            title={workspace === 'local' ? t.copyToCloud : t.copyToLocal}
+                                                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-brand-500"
+                                                        >
+                                                            <IconCopyWorkspace />
+                                                        </button>
                                                         <button 
                                                             onClick={(e) => togglePinNote(note.id, e)}
-                                                            title={note.isPinned ? '取消釘選' : '釘選筆記'}
+                                                            title={note.isPinned ? t.unpinNote : t.pinNote}
                                                             className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400"
                                                         >
                                                             <IconPin filled={note.isPinned} />
                                                         </button>
                                                         <button 
                                                             onClick={(e) => exportNoteAsMarkdown(note, e)}
-                                                            title="下載為 .md 檔案"
+                                                            title={t.downloadMd}
                                                             className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-brand-500"
                                                         >
                                                             <IconDownload />
                                                         </button>
                                                         <button 
                                                             onClick={(e) => deleteNote(note.id, e)}
-                                                            title="刪除筆記"
+                                                            title={t.deleteNote}
                                                             className="p-1 hover:bg-red-100 dark:hover:bg-red-950/50 rounded text-slate-400 hover:text-red-500"
                                                         >
                                                             <IconTrash />
@@ -812,10 +1131,9 @@
                                                 </div>
 
                                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-1.5 font-normal">
-                                                    {note.content.replace(/[#*`_~-]/g, '').trim() || '空白筆記'}
+                                                    {note.content.replace(/[#*`_~-]/g, '').trim() || 'Empty Note'}
                                                 </p>
 
-                                                {/* Tags Badges & Date */}
                                                 <div className="flex items-center justify-between text-[10px] text-slate-400">
                                                     <div className="flex items-center gap-1 overflow-hidden">
                                                         {(note.tags || []).slice(0, 2).map(tag => (
@@ -835,76 +1153,84 @@
                                 )}
                             </div>
 
-                            {/* Sidebar Footer */}
+                            {/* Sidebar Footer Toolbar with Language Switcher */}
                             <div className="p-2.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
                                 <div className="flex items-center space-x-1">
+                                    {/* Language Switch Button */}
+                                    <button 
+                                        onClick={() => setLang(prev => prev === 'zh' ? 'en' : 'zh')}
+                                        className="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md font-bold text-[11px] text-slate-700 dark:text-slate-200 transition-colors"
+                                        title="Switch Language / 切換語言"
+                                    >
+                                        {t.switchLang}
+                                    </button>
                                     <button 
                                         onClick={() => setIsDarkMode(!isDarkMode)}
                                         className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
-                                        title={isDarkMode ? "切換亮色模式" : "切換深色模式"}
+                                        title={isDarkMode ? "Light Mode" : "Dark Mode"}
                                     >
                                         {isDarkMode ? <IconSun /> : <IconMoon />}
                                     </button>
                                     <button 
                                         onClick={() => setShowGDriveModal(true)}
                                         className={`p-1.5 rounded-md transition-colors flex items-center gap-1 ${
-                                            gDriveConfig.connected ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                                            accessToken ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                                         }`}
-                                        title="Google Drive 同步設定"
+                                        title={t.gDriveTitle}
                                     >
                                         <IconCloud />
                                     </button>
                                     <button 
                                         onClick={() => setShowShortcutModal(true)}
                                         className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
-                                        title="快捷鍵指南"
+                                        title={t.shortcutsTitle}
                                     >
                                         <IconKeyboard />
                                     </button>
                                 </div>
-                                <span className="text-[11px]">{notes.length} 篇筆記</span>
+                                <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                    {workspace === 'local' ? t.local : t.cloud}
+                                </span>
                             </div>
                         </aside>
                     )}
 
-                    {}
+                    {/* MAIN CONTENT AREA */}
                     <main className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900 relative">
-                        
-                        {/* Top Header Toolbar with Note Title */}
+
+                        {/* Top Header Toolbar */}
                         {!isZenMode && (
                             <header className="h-12 border-b border-slate-200 dark:border-slate-800 px-3 flex items-center justify-between bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-10 gap-2">
                                 <div className="flex items-center space-x-2 flex-1 min-w-0">
                                     <button
                                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                                         className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
-                                        title="切換側邊欄"
                                     >
                                         <IconSidebar />
                                     </button>
                                     <span className="text-slate-300 dark:text-slate-700">|</span>
 
-                                    {/* Note Title Input placed inside Top Toolbar */}
                                     {activeNote ? (
                                         <input
                                             type="text"
                                             value={activeNote.title}
                                             onChange={(e) => updateActiveNote({ title: e.target.value })}
-                                            placeholder="筆記名稱..."
+                                            placeholder="Note Title..."
                                             className="flex-1 font-bold text-sm sm:text-base text-slate-900 dark:text-white bg-transparent border-none focus:outline-none placeholder-slate-400 truncate"
                                         />
                                     ) : (
-                                        <span className="text-xs text-slate-400">尚無選擇筆記</span>
+                                        <span className="text-xs text-slate-400">{t.noNoteSelected}</span>
                                     )}
                                 </div>
 
                                 {activeNote && (
-                                    <div className="flex items-center space-x-1 flex-shrink-0">
+                                    <div className="flex items-center space-x-2 flex-shrink-0">
                                         <span className="hidden md:inline text-[11px] text-slate-400 mr-1">
                                             {formatDate(activeNote.updatedAt)}
                                         </span>
 
-                                        {/* View Mode Switcher (Icon Only) */}
-                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                                        {/* Icon-only View Mode Switcher */}
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700/50 space-x-0.5">
                                             <button
                                                 onClick={() => setViewMode('edit')}
                                                 className={`p-1.5 rounded-md transition-colors ${
@@ -912,10 +1238,11 @@
                                                         ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm' 
                                                         : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                                                 }`}
-                                                title="編輯模式"
+                                                title={t.editMode}
                                             >
                                                 <IconEdit />
                                             </button>
+
                                             <button
                                                 onClick={() => setViewMode('split')}
                                                 className={`p-1.5 rounded-md transition-colors ${
@@ -923,10 +1250,11 @@
                                                         ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm' 
                                                         : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                                                 }`}
-                                                title="雙欄模式"
+                                                title={t.splitMode}
                                             >
                                                 <IconColumns />
                                             </button>
+
                                             <button
                                                 onClick={() => setViewMode('preview')}
                                                 className={`p-1.5 rounded-md transition-colors ${
@@ -934,29 +1262,17 @@
                                                         ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm' 
                                                         : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                                                 }`}
-                                                title="預覽模式"
+                                                title={t.previewMode}
                                             >
                                                 <IconEye />
                                             </button>
                                         </div>
 
-                                        {/* Google Drive Sync Button */}
-                                        <button
-                                            onClick={handleGoogleDriveSync}
-                                            disabled={isSyncing}
-                                            className={`p-1.5 text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors ${
-                                                isSyncing ? 'animate-spin text-brand-500' : ''
-                                            }`}
-                                            title={gDriveConfig.connected ? `同步至 GD (上次: ${gDriveConfig.lastSynced || '未同步'})` : '連線 Google Drive 同步'}
-                                        >
-                                            <IconCloud />
-                                        </button>
-
                                         {/* Zen Mode Button */}
                                         <button
                                             onClick={() => setIsZenMode(true)}
                                             className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
-                                            title="專注模式 (Cmd/Ctrl + Shift + Z)"
+                                            title={`${t.shortcutZen} (Cmd/Ctrl + Shift + Z)`}
                                         >
                                             <IconMaximize />
                                         </button>
@@ -970,75 +1286,129 @@
                             <button
                                 onClick={() => setIsZenMode(false)}
                                 className="fixed top-4 right-4 z-50 p-2 bg-slate-800/80 hover:bg-slate-800 text-white rounded-full shadow-lg backdrop-blur transition-all"
-                                title="退出專注模式 (Esc)"
+                                title="Exit Zen Mode (Esc)"
                             >
                                 <IconMinimize />
                             </button>
                         )}
 
-                        {}
                         {activeNote ? (
                             <div className="flex-1 flex flex-col h-full overflow-hidden">
-                                
-                                {/* Tag Chips Toolbar inside note body */}
-                                <div className="px-4 pt-3 pb-1 flex items-center flex-wrap gap-1.5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/40 text-xs">
-                                    <span className="text-slate-400 flex items-center gap-1 font-medium text-[11px]">
-                                        <IconTag /> 標籤:
-                                    </span>
-                                    
-                                    {(activeNote.tags || []).map(tag => (
-                                        <span 
-                                            key={tag}
-                                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-xs"
-                                        >
-                                            <span>{tag}</span>
-                                            <button 
-                                                onClick={() => handleRemoveTagFromActiveNote(tag)}
-                                                className="text-slate-400 hover:text-red-500 rounded-full"
-                                            >
-                                                ✕
-                                            </button>
-                                        </span>
-                                    ))}
 
-                                    {showTagAdder ? (
-                                        <div className="inline-flex items-center gap-1">
-                                            <input
-                                                type="text"
-                                                value={newTagInput}
-                                                onChange={(e) => setNewTagInput(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleAddTagToActiveNote()}
-                                                placeholder="例: 工作/專案A"
-                                                className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-xs rounded border border-brand-500 focus:outline-none w-28"
-                                                autoFocus
-                                            />
-                                            <button 
-                                                onClick={handleAddTagToActiveNote}
-                                                className="px-2 py-0.5 bg-brand-600 text-white text-xs rounded hover:bg-brand-700"
+                                {/* Tag Chips Toolbar */}
+                                <div className="px-4 py-2 flex items-center justify-between flex-wrap gap-2 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/40 text-xs">
+                                    <div className="flex items-center flex-wrap gap-1.5">
+                                        <span className="text-slate-400 flex items-center gap-1 font-medium text-[11px]">
+                                            <IconTag /> {t.tags}:
+                                        </span>
+
+                                        {(activeNote.tags || []).map(tag => (
+                                            <span 
+                                                key={tag}
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-xs"
                                             >
-                                                加入
-                                            </button>
-                                            <button 
-                                                onClick={() => setShowTagAdder(false)}
-                                                className="text-slate-400 hover:text-slate-600 text-xs px-1"
+                                                <span>{tag}</span>
+                                                <button 
+                                                    onClick={() => handleRemoveTagFromActiveNote(tag)}
+                                                    className="text-slate-400 hover:text-red-500 rounded-full"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </span>
+                                        ))}
+
+                                        {showTagAdder ? (
+                                            <div className="inline-flex items-center gap-1">
+                                                <input
+                                                    type="text"
+                                                    value={newTagInput}
+                                                    onChange={(e) => setNewTagInput(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleAddTagToActiveNote()}
+                                                    placeholder={t.tagPlaceholder}
+                                                    className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-xs rounded border border-brand-500 focus:outline-none w-28"
+                                                    autoFocus
+                                                />
+                                                <button 
+                                                    onClick={handleAddTagToActiveNote}
+                                                    className="px-2 py-0.5 bg-brand-600 text-white text-xs rounded hover:bg-brand-700"
+                                                >
+                                                    {t.addTag}
+                                                </button>
+                                                <button 
+                                                    onClick={() => setShowTagAdder(false)}
+                                                    className="text-slate-400 hover:text-slate-600 text-xs px-1"
+                                                >
+                                                    {t.cancel}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => setShowTagAdder(true)}
+                                                className="inline-flex items-center gap-0.5 px-2 py-0.5 border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-full text-xs transition-colors"
                                             >
-                                                取消
+                                                <IconPlus /> {t.tags}
                                             </button>
+                                        )}
+                                    </div>
+
+                                    {/* 文字大小與頁面寬度選擇器（放置於標籤列最右側） */}
+                                    <div className="flex items-center space-x-2 flex-shrink-0 ml-auto">
+                                        {/* Font Size Selector */}
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/50 items-center">
+                                            <span className="px-1.5 text-slate-400" title={t.fontSize}>
+                                                <IconTextSize />
+                                            </span>
+                                            {[
+                                                { key: 'sm', label: '小' },
+                                                { key: 'base', label: '中' },
+                                                { key: 'lg', label: '大' },
+                                                { key: 'xl', label: '特大' }
+                                            ].map(item => (
+                                                <button
+                                                    key={item.key}
+                                                    onClick={() => setFontSize(item.key)}
+                                                    className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                                                        fontSize === item.key 
+                                                            ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 font-bold shadow-sm' 
+                                                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                                                    }`}
+                                                >
+                                                    {item.label}
+                                                </button>
+                                            ))}
                                         </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => setShowTagAdder(true)}
-                                            className="inline-flex items-center gap-0.5 px-2 py-0.5 border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-full text-xs transition-colors"
-                                        >
-                                            <IconPlus /> 標籤
-                                        </button>
-                                    )}
+
+                                        {/* Page Width Selector */}
+                                        <div className="hidden sm:flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/50 items-center">
+                                            <span className="px-1.5 text-slate-400" title={t.pageWidth}>
+                                                <IconWidth />
+                                            </span>
+                                            {[
+                                                { key: 'narrow', label: '精簡' },
+                                                { key: 'normal', label: '標準' },
+                                                { key: 'wide', label: '寬版' },
+                                                { key: 'full', label: '全螢幕' }
+                                            ].map(item => (
+                                                <button
+                                                    key={item.key}
+                                                    onClick={() => setContentWidth(item.key)}
+                                                    className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                                                        contentWidth === item.key 
+                                                            ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 font-bold shadow-sm' 
+                                                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                                                    }`}
+                                                >
+                                                    {item.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Main Content Workspace Panel with Padding 4 */}
-                                <div className="flex-1 flex overflow-hidden p-4 gap-4">
-                                    
-                                    {/* Editor Textarea */}
+                                {/* Editor / Preview Workspace Wrapper with Custom Content Width */}
+                                <div className={`w-full ${contentWidthClassMap[contentWidth] || 'max-w-4xl'} mx-auto flex-1 flex overflow-hidden p-4 gap-4 transition-all duration-200`}>
+
+                                    {/* Textarea Editor */}
                                     {(viewMode === 'edit' || viewMode === 'split') && (
                                         <div className={`flex-1 flex flex-col h-full min-w-0 ${viewMode === 'split' ? 'border-r border-slate-200 dark:border-slate-800 pr-4' : ''}`}>
                                             <textarea
@@ -1046,55 +1416,51 @@
                                                 value={activeNote.content}
                                                 onChange={(e) => updateActiveNote({ content: e.target.value })}
                                                 onKeyDown={handleKeyDownTextarea}
-                                                placeholder="開始使用 Markdown 輸入筆記內容..."
-                                                className="w-full h-full resize-none bg-transparent font-mono text-sm leading-relaxed text-slate-800 dark:text-slate-200 border-none focus:outline-none placeholder-slate-400 selection:bg-brand-500 selection:text-white"
+                                                placeholder="Write markdown content..."
+                                                className={`w-full h-full resize-none bg-transparent font-mono ${fontSizeClassMap[fontSize] || 'text-sm'} leading-relaxed text-slate-800 dark:text-slate-200 border-none focus:outline-none placeholder-slate-400 selection:bg-brand-500 selection:text-white`}
                                             />
                                         </div>
                                     )}
 
-                                    {/* Markdown Preview Rendered */}
+                                    {/* Preview Rendered Pane */}
                                     {(viewMode === 'preview' || viewMode === 'split') && (
                                         <div className="flex-1 h-full overflow-y-auto min-w-0 pr-1">
                                             <div 
-                                                className="markdown-preview text-slate-800 dark:text-slate-200 text-sm"
+                                                className={`markdown-preview text-slate-800 dark:text-slate-200 ${fontSizeClassMap[fontSize] || 'text-sm'}`}
                                                 dangerouslySetInnerHTML={renderedMarkdown}
                                             />
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Status Footer Bar */}
+                                {/* Status Footer */}
                                 {!isZenMode && (
                                     <div className="h-7 border-t border-slate-100 dark:border-slate-800 px-4 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-900/50">
                                         <div className="flex items-center space-x-3">
-                                            <span>{stats.words} 字數</span>
-                                            <span>{stats.chars} 字元</span>
+                                            <span>{stats.words} {t.words}</span>
+                                            <span>{stats.chars} {t.chars}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            {gDriveConfig.connected && (
-                                                <span className="text-emerald-500 flex items-center gap-1">
-                                                    ● Google Drive 已連線 (appData)
-                                                </span>
-                                            )}
-                                            <span>Markdown 自動儲存</span>
+                                            <span>
+                                                {t.saved} <strong className="text-slate-600 dark:text-slate-300">{workspace === 'local' ? t.localWorkspace : t.cloudWorkspace}</strong>
+                                            </span>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-                                <p className="mb-4 text-base">目前沒有選擇任何筆記</p>
+                                <p className="mb-4 text-base">{t.noNoteSelected}</p>
                                 <button
                                     onClick={createNewNote}
                                     className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors shadow-sm"
                                 >
-                                    建立新筆記
+                                    {t.createNoteBtn}
                                 </button>
                             </div>
                         )}
                     </main>
 
-                    {}
                     {/* Google Drive Configuration Modal */}
                     {showGDriveModal && (
                         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1102,7 +1468,7 @@
                                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                                     <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                                         <IconCloud />
-                                        <span>Google Drive Auth 同步</span>
+                                        <span>{t.gDriveTitle}</span>
                                     </h3>
                                     <button 
                                         onClick={() => setShowGDriveModal(false)}
@@ -1112,7 +1478,6 @@
                                     </button>
                                 </div>
 
-                                {}
                                 <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
                                     {userInfo ? (
                                         <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-between">
@@ -1133,37 +1498,15 @@
                                                 onClick={handleGoogleLogout}
                                                 className="px-2.5 py-1 text-[11px] bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 hover:bg-red-200 rounded"
                                             >
-                                                登出
+                                                {t.logout}
                                             </button>
                                         </div>
                                     ) : (
                                         <div className="p-3 bg-brand-50 dark:bg-brand-950/40 rounded-lg border border-brand-200 dark:border-brand-900/50">
-                                            <p className="font-semibold text-brand-700 dark:text-brand-300 mb-1">🔒 Google App 專屬空間同步</p>
+                                            <p className="font-semibold text-brand-700 dark:text-brand-300 mb-1">☁️ {t.gDriveTitle}</p>
                                             <p className="leading-relaxed">
-                                                使用 <code className="bg-white dark:bg-slate-800 px-1 rounded font-mono">appDataFolder</code> 權限，筆記僅會上傳至專屬隔離資料夾，保障隱私與資料安全。
+                                                {t.gDriveDesc}
                                             </p>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">
-                                            Google Client ID:
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={gDriveConfig.clientId}
-                                            onChange={(e) => setGDriveConfig(prev => ({ ...prev, clientId: e.target.value }))}
-                                            placeholder="請輸入 Google Cloud Console OAuth 2.0 Client ID"
-                                            className="w-full px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-brand-500 text-xs font-mono"
-                                        />
-                                        <p className="text-[10px] text-slate-400 mt-1">
-                                            需至 <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="text-brand-500 underline">Google Cloud Console</a> 建立 OAuth Client ID 並設定 JavaScript 來源。
-                                        </p>
-                                    </div>
-
-                                    {gDriveConfig.lastSynced && (
-                                        <div className="text-[11px] text-slate-400">
-                                            上次同步時間: {gDriveConfig.lastSynced}
                                         </div>
                                     )}
                                 </div>
@@ -1176,26 +1519,15 @@
                                             className="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-2"
                                         >
                                             <IconCloud />
-                                            <span>使用 Google Auth 帳號登入</span>
+                                            <span>{t.loginGoogle}</span>
                                         </button>
                                     ) : (
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                onClick={() => syncWithDrive()}
-                                                disabled={isSyncing}
-                                                className="py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1"
-                                            >
-                                                <IconCloud />
-                                                <span>{isSyncing ? '同步中...' : '備份筆記至雲端'}</span>
-                                            </button>
-                                            <button
-                                                onClick={restoreFromDrive}
-                                                disabled={isSyncing}
-                                                className="py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors"
-                                            >
-                                                從雲端下載回復
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={() => { setWorkspace('cloud'); setShowGDriveModal(false); }}
+                                            className="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                        >
+                                            切換至雲端工作區
+                                        </button>
                                     )}
 
                                     <button
@@ -1216,7 +1548,7 @@
                                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                                     <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                                         <IconKeyboard />
-                                        <span>鍵盤快捷鍵指南</span>
+                                        <span>{t.shortcutsTitle}</span>
                                     </h3>
                                     <button 
                                         onClick={() => setShowShortcutModal(false)}
@@ -1228,19 +1560,19 @@
 
                                 <div className="space-y-2.5 text-xs">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-slate-600 dark:text-slate-400">建立新筆記</span>
+                                        <span className="text-slate-600 dark:text-slate-400">{t.shortcutNewNote}</span>
                                         <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Cmd/Ctrl + N</kbd>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-slate-600 dark:text-slate-400">即時搜尋筆記</span>
+                                        <span className="text-slate-600 dark:text-slate-400">{t.shortcutSearch}</span>
                                         <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Cmd/Ctrl + F 或 /</kbd>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-slate-600 dark:text-slate-400">切換 編輯/雙欄/預覽</span>
+                                        <span className="text-slate-600 dark:text-slate-400">{t.shortcutViewMode}</span>
                                         <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Cmd/Ctrl + E</kbd>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-slate-600 dark:text-slate-400">極簡專注模式 (Zen)</span>
+                                        <span className="text-slate-600 dark:text-slate-400">{t.shortcutZen}</span>
                                         <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 font-mono">Cmd/Ctrl + Shift + Z</kbd>
                                     </div>
                                 </div>
@@ -1250,7 +1582,7 @@
                                         onClick={() => setShowShortcutModal(false)}
                                         className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs font-medium transition-colors"
                                     >
-                                        確定
+                                        {t.confirm}
                                     </button>
                                 </div>
                             </div>
