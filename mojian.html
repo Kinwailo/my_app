@@ -1,555 +1,1140 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#F3EEE4" />
   <meta name="description" content="墨箋 — 專注寫作的本機 Markdown 筆記" />
   <title>墨箋</title>
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="./mojian.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&display=swap"
+    rel="stylesheet" />
   <style>
     :root {
-      --bg: #f3eee4; --paper: #faf6ee; --sidebar: #e9e1d3; --fg: #1c1914;
-      --muted: #6f675c; --subtle: #9a9184; --accent: #2f4a3c; --accent-fg: #f3eee4;
-      --border: #d6cdbdd9; --danger: #8a3b2d; --ring: #2f4a3c; --code: #e7dfd0; --mark: #d7c7a6;
+      --bg: #f3eee4;
+      --paper: #faf6ee;
+      --sidebar: #e9e1d3;
+      --fg: #1c1914;
+      --muted: #6f675c;
+      --subtle: #9a9184;
+      --accent: #2f4a3c;
+      --accent-fg: #f3eee4;
+      --border: #d6cdbdd9;
+      --danger: #8a3b2d;
+      --ring: #2f4a3c;
+      --code: #e7dfd0;
+      --mark: #d7c7a6;
       --shadow: 0 0 0 1px rgb(28 25 20 / 0.06), 0 1px 2px -1px rgb(28 25 20 / 0.06), 0 2px 4px 0 rgb(28 25 20 / 0.04);
       --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
       --font-serif: "Newsreader", "Source Han Serif TC", "Songti TC", serif;
       --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-    body { overflow: hidden; }
-    button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
-    ::selection { background: color-mix(in oklab, var(--accent) 22%, transparent); }
-    :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-    .app { display: flex; height: 100dvh; overflow: hidden; background: var(--bg); }
-    .sidebar { width: 18rem; flex-shrink: 0; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
-    .brand { display: flex; align-items: center; gap: 8px; padding: 16px 12px 12px; }
-    .brand-text { flex: 1; min-width: 0; }
-    .brand-text h1 { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 500; margin: 0; letter-spacing: -0.02em; }
-    .brand-text p { margin: 4px 0 0; font-size: 12px; color: var(--subtle); }
-    .icon-btn { width: 44px; height: 44px; border: 0; background: transparent; color: var(--fg); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
-    .icon-btn:hover { background: rgb(28 25 20 / 0.06); }
-    .icon-btn:active { scale: 0.96; }
-    .icon-btn.danger:hover { color: var(--danger); background: rgb(138 59 45 / 0.1); }
-    .search-wrap { padding: 0 12px 12px; position: relative; }
-    .search-wrap svg { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); color: var(--subtle); }
-    .search-wrap input { width: 100%; height: 44px; border: 0; border-radius: 8px; background: color-mix(in oklab, var(--paper) 80%, transparent); box-shadow: var(--shadow); padding: 0 12px 0 36px; font: inherit; font-size: 14px; color: var(--fg); }
-    .search-wrap input::placeholder { color: var(--subtle); }
-    .search-wrap input:focus { outline: none; box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ring); }
-    .list { flex: 1; min-height: 0; overflow: auto; padding: 0 8px 16px; }
-    .note-item { border-radius: 8px; padding: 10px 12px; cursor: pointer; margin-bottom: 4px; display: flex; gap: 8px; align-items: flex-start; }
-    .note-item:hover { background: rgb(28 25 20 / 0.05); }
-    .note-item.active { background: var(--paper); box-shadow: var(--shadow); }
-    .note-item .meta { flex: 1; min-width: 0; }
-    .note-item h3 { margin: 0; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .note-item .snip { margin: 2px 0 0; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .note-item time { display: block; margin-top: 6px; font-size: 12px; color: var(--subtle); font-variant-numeric: tabular-nums; }
-    .note-item .del { opacity: 0; width: 32px; height: 32px; }
-    .note-item:hover .del, .note-item:focus-within .del { opacity: 1; }
-    mark { background: var(--mark); color: var(--fg); border-radius: 2px; padding: 0 2px; }
-    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--paper); position: relative; }
-    .toolbar { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border); }
-    .toolbar-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
-    .title-input { flex: 1; min-width: 0; border: 0; background: transparent; font-family: var(--font-serif); font-size: 16px; color: var(--fg); outline: none; }
-    .title-input::placeholder { color: var(--subtle); }
-    .view-switch { display: flex; background: var(--sidebar); border-radius: 8px; padding: 2px; }
-    .view-switch button { border: 0; background: transparent; height: 32px; padding: 0 10px; border-radius: 6px; font: inherit; font-size: 13px; color: var(--muted); }
-    .view-switch button[aria-checked="true"] { background: var(--paper); color: var(--fg); box-shadow: var(--shadow); }
-    .tag-input { height: 32px; width: 7rem; border: 0; border-radius: 8px; background: var(--sidebar); padding: 0 10px; font: inherit; font-size: 13px; color: var(--fg); }
-    .tag-input:disabled { opacity: 0.4; }
-    .chips { display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 12px; }
-    .chip { border: 0; height: 28px; flex: none; border-radius: 999px; padding: 0 10px; font: inherit; font-size: 12px; background: var(--paper); color: var(--muted); }
-    .chip.active { background: var(--accent); color: var(--accent-fg); }
-    .tagline { margin: 4px 0 0; font-size: 11px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .panes.stack { flex-direction: column; }
-    .panes.stack .pane + .pane { border-left: 0; border-top: 1px solid var(--border); }
-    .toolbar .title { flex: 1; min-width: 0; font-family: var(--font-serif); font-size: 16px; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
-    .panes { flex: 1; min-height: 0; display: flex; }
-    .pane { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
-    .pane + .pane { border-left: 1px solid var(--border); }
-    textarea.editor { flex: 1; min-height: 0; width: 100%; max-width: 42rem; margin: 0 auto; border: 0; resize: none; background: transparent; color: var(--fg); font-family: var(--font-serif); font-size: 1.125rem; line-height: 1.7; padding: 2.5rem 1.25rem; outline: none; }
-    textarea.editor::placeholder { color: var(--subtle); }
-    .preview { flex: 1; min-height: 0; overflow: auto; }
-    .prose { max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.25rem; font-family: var(--font-serif); font-size: 1.125rem; line-height: 1.7; color: var(--fg); }
-    .prose > :first-child { margin-top: 0; }
-    .prose h1, .prose h2, .prose h3 { font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
-    .prose h1 { font-size: 2rem; margin: 0 0 1.25rem; }
-    .prose h2 { font-size: 1.4rem; margin: 2rem 0 0.75rem; }
-    .prose h3 { font-size: 1.15rem; margin: 1.5rem 0 0.5rem; }
-    .prose p { margin: 0 0 1rem; }
-    .prose a { color: var(--accent); }
-    .prose blockquote { margin: 1.25rem 0; padding-left: 1rem; border-left: 2px solid var(--accent); color: var(--muted); }
-    .prose ul, .prose ol { margin: 0 0 1rem; padding-left: 1.35rem; }
-    .prose code { font-family: var(--font-mono); font-size: 0.86em; background: var(--code); border-radius: 4px; padding: 0.12em 0.35em; }
-    .prose pre { background: var(--code); border-radius: 12px; padding: 1rem; overflow-x: auto; box-shadow: var(--shadow); }
-    .prose pre code { background: none; padding: 0; font-size: 0.82rem; }
-    .prose hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
-    .status { height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--subtle); font-variant-numeric: tabular-nums; }
-    .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
-    .empty h2 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 500; margin: 0; }
-    .empty p { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
-    .primary { margin-top: 24px; height: 40px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-fg); font: inherit; font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
-    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--fg); color: var(--bg); border-radius: 8px; padding: 10px 14px; font-size: 14px; display: flex; gap: 12px; align-items: center; z-index: 50; }
-    .toast button { background: none; border: 0; color: var(--bg); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
-    .dialog-bg { position: fixed; inset: 0; background: rgb(28 25 20 / 0.3); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
-    .dialog { width: min(28rem, 100%); background: var(--paper); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
-    .dialog h2 { font-family: var(--font-serif); margin: 0; font-size: 1.25rem; }
-    .dialog p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
-    .dialog ul { list-style: none; padding: 0; margin: 16px 0 0; }
-    .dialog li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-    kbd { display: inline-flex; min-width: 20px; height: 20px; align-items: center; justify-content: center; padding: 0 4px; border-radius: 4px; background: rgb(28 25 20 / 0.08); font-family: var(--font-sans); font-size: 11px; color: var(--muted); }
-    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-    .backdrop { display: none; }
-    @media (max-width: 767px) {
-      .sidebar { position: fixed; inset: 0 auto 0 0; width: 100%; z-index: 30; }
-      .sidebar.closed { transform: translateX(-100%); opacity: 0; pointer-events: none; }
-      .backdrop { display: block; position: fixed; inset: 0; background: rgb(28 25 20 / 0.25); z-index: 20; border: 0; }
-      .note-item .del { opacity: 1; }
-      .status .hints { display: none; }
+
+    * {
+      box-sizing: border-box;
     }
+
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    button:not(:disabled),
+    [role="button"]:not(:disabled) {
+      cursor: pointer;
+    }
+
+    ::selection {
+      background: color-mix(in oklab, var(--accent) 22%, transparent);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: 2px;
+    }
+
+    .app {
+      display: flex;
+      height: 100dvh;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .sidebar {
+      width: 18rem;
+      flex-shrink: 0;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px 12px;
+    }
+
+    .brand-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .brand-text h1 {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--subtle);
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 0;
+      background: transparent;
+      color: var(--fg);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-btn:hover {
+      background: rgb(28 25 20 / 0.06);
+    }
+
+    .icon-btn:active {
+      scale: 0.96;
+    }
+
+    .icon-btn.danger:hover {
+      color: var(--danger);
+      background: rgb(138 59 45 / 0.1);
+    }
+
+    .search-wrap {
+      padding: 0 12px 12px;
+      position: relative;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--subtle);
+    }
+
+    .search-wrap input {
+      width: 100%;
+      height: 44px;
+      border: 0;
+      border-radius: 8px;
+      background: color-mix(in oklab, var(--paper) 80%, transparent);
+      box-shadow: var(--shadow);
+      padding: 0 12px 0 36px;
+      font: inherit;
+      font-size: 14px;
+      color: var(--fg);
+    }
+
+    .search-wrap input::placeholder {
+      color: var(--subtle);
+    }
+
+    .search-wrap input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ring);
+    }
+
+    .list {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 0 8px 16px;
+    }
+
+    .note-item {
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .note-item:hover {
+      background: rgb(28 25 20 / 0.05);
+    }
+
+    .note-item.active {
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .note-item .meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .note-item h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .note-item .snip {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .note-item time {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--subtle);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .note-item .del {
+      opacity: 0;
+      width: 32px;
+      height: 32px;
+    }
+
+    .note-item:hover .del,
+    .note-item:focus-within .del {
+      opacity: 1;
+    }
+
+    mark {
+      background: var(--mark);
+      color: var(--fg);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--paper);
+      position: relative;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .title-input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      color: var(--fg);
+      outline: none;
+    }
+
+    .title-input::placeholder {
+      color: var(--subtle);
+    }
+
+    .view-switch {
+      display: flex;
+      background: var(--sidebar);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .view-switch button {
+      border: 0;
+      background: transparent;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .view-switch button[aria-checked="true"] {
+      background: var(--paper);
+      color: var(--fg);
+      box-shadow: var(--shadow);
+    }
+
+    .tag-input {
+      height: 32px;
+      width: 7rem;
+      border: 0;
+      border-radius: 8px;
+      background: var(--sidebar);
+      padding: 0 10px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--fg);
+    }
+
+    .tag-input:disabled {
+      opacity: 0.4;
+    }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 0 12px 12px;
+    }
+
+    .chip {
+      border: 0;
+      height: 28px;
+      flex: none;
+      border-radius: 999px;
+      padding: 0 10px;
+      font: inherit;
+      font-size: 12px;
+      background: var(--paper);
+      color: var(--muted);
+    }
+
+    .chip.active {
+      background: var(--accent);
+      color: var(--accent-fg);
+    }
+
+    .tagline {
+      margin: 4px 0 0;
+      font-size: 11px;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panes.stack {
+      flex-direction: column;
+    }
+
+    .panes.stack .pane+.pane {
+      border-left: 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .toolbar .title {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 4px;
+    }
+
+    .panes {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+    }
+
+    .pane {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pane+.pane {
+      border-left: 1px solid var(--border);
+    }
+
+    textarea.editor {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      max-width: 42rem;
+      margin: 0 auto;
+      border: 0;
+      resize: none;
+      background: transparent;
+      color: var(--fg);
+      font-family: var(--font-serif);
+      font-size: 1.125rem;
+      line-height: 1.7;
+      padding: 2.5rem 1.25rem;
+      outline: none;
+    }
+
+    textarea.editor::placeholder {
+      color: var(--subtle);
+    }
+
+    .preview {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .prose {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem;
+      font-family: var(--font-serif);
+      font-size: 1.125rem;
+      line-height: 1.7;
+      color: var(--fg);
+    }
+
+    .prose> :first-child {
+      margin-top: 0;
+    }
+
+    .prose h1,
+    .prose h2,
+    .prose h3 {
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+
+    .prose h1 {
+      font-size: 2rem;
+      margin: 0 0 1.25rem;
+    }
+
+    .prose h2 {
+      font-size: 1.4rem;
+      margin: 2rem 0 0.75rem;
+    }
+
+    .prose h3 {
+      font-size: 1.15rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .prose p {
+      margin: 0 0 1rem;
+    }
+
+    .prose a {
+      color: var(--accent);
+    }
+
+    .prose blockquote {
+      margin: 1.25rem 0;
+      padding-left: 1rem;
+      border-left: 2px solid var(--accent);
+      color: var(--muted);
+    }
+
+    .prose ul,
+    .prose ol {
+      margin: 0 0 1rem;
+      padding-left: 1.35rem;
+    }
+
+    .prose code {
+      font-family: var(--font-mono);
+      font-size: 0.86em;
+      background: var(--code);
+      border-radius: 4px;
+      padding: 0.12em 0.35em;
+    }
+
+    .prose pre {
+      background: var(--code);
+      border-radius: 12px;
+      padding: 1rem;
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+    }
+
+    .prose pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.82rem;
+    }
+
+    .prose hr {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+
+    .status {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--subtle);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .empty h2 {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .empty p {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 8px 0 0;
+    }
+
+    .primary {
+      margin-top: 24px;
+      height: 40px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: var(--accent-fg);
+      font: inherit;
+      font-weight: 500;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      background: var(--fg);
+      color: var(--bg);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      z-index: 50;
+    }
+
+    .toast button {
+      background: none;
+      border: 0;
+      color: var(--bg);
+      font: inherit;
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .dialog-bg {
+      position: fixed;
+      inset: 0;
+      background: rgb(28 25 20 / 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 60;
+    }
+
+    .dialog {
+      width: min(28rem, 100%);
+      background: var(--paper);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .dialog h2 {
+      font-family: var(--font-serif);
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .dialog p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .dialog ul {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0;
+    }
+
+    .dialog li {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    kbd {
+      display: inline-flex;
+      min-width: 20px;
+      height: 20px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border-radius: 4px;
+      background: rgb(28 25 20 / 0.08);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+
+    .backdrop {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: 100%;
+        z-index: 30;
+      }
+
+      .sidebar.closed {
+        transform: translateX(-100%);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgb(28 25 20 / 0.25);
+        z-index: 20;
+        border: 0;
+      }
+
+      .note-item .del {
+        opacity: 1;
+      }
+
+      .status .hints {
+        display: none;
+      }
+    }
+
     @media (min-width: 768px) {
-      .close-mobile { display: none !important; }
-      .sidebar.closed { display: none; }
+      .close-mobile {
+        display: none !important;
+      }
+
+      .sidebar.closed {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app" id="app"></div>
   <script>
-const STORAGE = "mojian-notes-pages-v1";
-const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
-const mod = isMac ? "⌘" : "Ctrl";
-const desktop = () => window.matchMedia("(min-width: 768px)").matches;
-const icon = {
-  plus: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>',
-  search: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>',
-  trash: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-1 0v14H9V6"/></svg>',
-  panel: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>',
-  pencil: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
-  eye: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
-  cols: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>',
-  max: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
-  min: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>',
-  keys: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>',
-  x: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
-  file: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>'
-};
-const WELCOME = "# 歡迎使用墨箋\n\n專注寫作的本機筆記。文字只存在這部瀏覽器，重新開啟後仍會保留。\n\n## 開始\n\n- 上方標題列可直接改名字\n- 標籤與子標籤用來分類\n- `" + mod + " N` — 新增筆記\n- `" + mod + " K` 或 `/` — 即時搜尋\n- `" + mod + " E` — 循環編輯 / 並排 / 預覽\n- `" + mod + " B` — 顯示或隱藏側邊欄\n- `" + mod + " ⌫` — 刪除目前筆記（可復原）\n- `?` — 快捷鍵一覽\n\n沒改過標題時，名字會取自第一行。\n\n## Markdown\n\n**粗體**、*斜體*、`行內程式碼`\n\n> 把想法寫下來，其餘的事之後再說。\n\n- 短句\n- 清單\n\n1. 呼吸\n2. 書寫\n";
-const SAMPLE = "# 晨間隨筆\n\n窗外還未全亮。桌上只留一盞燈，紙面偏暖。\n\n先寫三行，不論好壞。手熱了，句子自己會來。\n\n- 水\n- 窗\n- 未完成的段落\n";
+    const STORAGE = "mojian-notes-pages-v1";
+    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+    const mod = isMac ? "⌘" : "Ctrl";
+    const desktop = () => window.matchMedia("(min-width: 768px)").matches;
+    const icon = {
+      plus: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>',
+      search: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>',
+      trash: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-1 0v14H9V6"/></svg>',
+      panel: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>',
+      pencil: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+      eye: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+      cols: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>',
+      max: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
+      min: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>',
+      keys: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>',
+      x: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+      file: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>'
+    };
+    const WELCOME = "# 歡迎使用墨箋\n\n專注寫作的本機筆記。文字只存在這部瀏覽器，重新開啟後仍會保留。\n\n## 開始\n\n- 上方標題列可直接改名字\n- 標籤與子標籤用來分類\n- `" + mod + " N` — 新增筆記\n- `" + mod + " K` 或 `/` — 即時搜尋\n- `" + mod + " E` — 循環編輯 / 並排 / 預覽\n- `" + mod + " B` — 顯示或隱藏側邊欄\n- `" + mod + " ⌫` — 刪除目前筆記（可復原）\n- `?` — 快捷鍵一覽\n\n沒改過標題時，名字會取自第一行。\n\n## Markdown\n\n**粗體**、*斜體*、`行內程式碼`\n\n> 把想法寫下來，其餘的事之後再說。\n\n- 短句\n- 清單\n\n1. 呼吸\n2. 書寫\n";
+    const SAMPLE = "# 晨間隨筆\n\n窗外還未全亮。桌上只留一盞燈，紙面偏暖。\n\n先寫三行，不論好壞。手熱了，句子自己會來。\n\n- 水\n- 窗\n- 未完成的段落\n";
 
-function titleFrom(content) {
-  const line = (content.split("\n").find((r) => r.trim()) || "");
-  const stripped = line.replace(/^#{1,6}\s+/, "").replace(/^\s*[-*+]\s+/, "").replace(/^\s*\d+\.\s+/, "").replace(/[*_`~]/g, "").trim();
-  return stripped.slice(0, 80) || "未命名筆記";
-}
-function snippetFrom(content) {
-  return content.split("\n").map((r) => r.trim()).filter(Boolean).slice(1).join(" ").replace(/[#>*`_[\]()]/g, " ").replace(/\s+/g, " ").trim().slice(0, 90);
-}
-function countWords(text) {
-  const cjk = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
-  const latin = (text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, " ").match(/[A-Za-z0-9]+/g) || []).length;
-  return cjk + latin;
-}
-function relTime(ts) {
-  const s = Math.max(1, Math.round((Date.now() - ts) / 1000));
-  if (s < 60) return "少於 1 分鐘前";
-  if (s < 3600) return Math.round(s / 60) + " 分鐘前";
-  if (s < 86400) return Math.round(s / 3600) + " 小時前";
-  if (s < 604800) return Math.round(s / 86400) + " 天前";
-  const d = new Date(ts);
-  return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
-}
-function esc(s) {
-  return String(s).replace(/[&<>"]/g, function (c) {
-    return "&#" + c.charCodeAt(0) + ";";
-  });
-}
-function inline(s) {
-  return s
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-}
-function renderMd(src) {
-  if (!src.trim()) return "<p><em>尚未寫下任何內容。</em></p>";
-  const escaped = esc(src).replace(/\r\n/g, "\n");
-  const parts = escaped.split(/```([\s\S]*?)```/);
-  let html = "";
-  for (let i = 0; i < parts.length; i++) {
-    if (i % 2) {
-      const nl = parts[i].indexOf("\n");
-      const code = (nl >= 0 ? parts[i].slice(nl + 1) : parts[i]).replace(/\s+$/, "");
-      html += "<pre><code>" + code + "</code></pre>";
-      continue;
+    function titleFrom(content) {
+      const line = (content.split("\n").find((r) => r.trim()) || "");
+      const stripped = line.replace(/^#{1,6}\s+/, "").replace(/^\s*[-*+]\s+/, "").replace(/^\s*\d+\.\s+/, "").replace(/[*_`~]/g, "").trim();
+      return stripped.slice(0, 80) || "未命名筆記";
     }
-    const blocks = parts[i].split(/\n\n+/);
-    for (const block of blocks) {
-      if (!block.trim()) continue;
-      const lines = block.split("\n");
-      if (/^###\s/.test(block)) html += "<h3>" + inline(block.replace(/^###\s+/, "")) + "</h3>";
-      else if (/^##\s/.test(block)) html += "<h2>" + inline(block.replace(/^##\s+/, "")) + "</h2>";
-      else if (/^#\s/.test(block)) html += "<h1>" + inline(block.replace(/^#\s+/, "")) + "</h1>";
-      else if (/^>\s/.test(block)) html += "<blockquote>" + inline(lines.map((l) => l.replace(/^>\s?/, "")).join(" ")) + "</blockquote>";
-      else if (/^---+$/.test(block.trim())) html += "<hr />";
-      else if (lines.every((l) => /^[-*]\s/.test(l))) html += "<ul>" + lines.map((l) => "<li>" + inline(l.replace(/^[-*]\s+/, "")) + "</li>").join("") + "</ul>";
-      else if (lines.every((l) => /^\d+\.\s/.test(l))) html += "<ol>" + lines.map((l) => "<li>" + inline(l.replace(/^\d+\.\s+/, "")) + "</li>").join("") + "</ol>";
-      else html += "<p>" + inline(lines.join("<br />")) + "</p>";
+    function snippetFrom(content) {
+      return content.split("\n").map((r) => r.trim()).filter(Boolean).slice(1).join(" ").replace(/[#>*`_[\]()]/g, " ").replace(/\s+/g, " ").trim().slice(0, 90);
     }
-  }
-  return html;
-}
-function highlight(text, q) {
-  const query = q.trim();
-  if (!query) return esc(text);
-  const i = text.toLowerCase().indexOf(query.toLowerCase());
-  if (i < 0) return esc(text);
-  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
-}
-function uid() {
-  return (crypto.randomUUID && crypto.randomUUID()) || ("n" + Date.now() + Math.random().toString(16).slice(2));
-}
+    function countWords(text) {
+      const cjk = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+      const latin = (text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, " ").match(/[A-Za-z0-9]+/g) || []).length;
+      return cjk + latin;
+    }
+    function relTime(ts) {
+      const s = Math.max(1, Math.round((Date.now() - ts) / 1000));
+      if (s < 60) return "少於 1 分鐘前";
+      if (s < 3600) return Math.round(s / 60) + " 分鐘前";
+      if (s < 86400) return Math.round(s / 3600) + " 小時前";
+      if (s < 604800) return Math.round(s / 86400) + " 天前";
+      const d = new Date(ts);
+      return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
+    }
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, function (c) {
+        return "&#" + c.charCodeAt(0) + ";";
+      });
+    }
+    function inline(s) {
+      return s
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+        .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    }
+    function renderMd(src) {
+      if (!src.trim()) return "<p><em>尚未寫下任何內容。</em></p>";
+      const escaped = esc(src).replace(/\r\n/g, "\n");
+      const parts = escaped.split(/```([\s\S]*?)```/);
+      let html = "";
+      for (let i = 0; i < parts.length; i++) {
+        if (i % 2) {
+          const nl = parts[i].indexOf("\n");
+          const code = (nl >= 0 ? parts[i].slice(nl + 1) : parts[i]).replace(/\s+$/, "");
+          html += "<pre><code>" + code + "</code></pre>";
+          continue;
+        }
+        const blocks = parts[i].split(/\n\n+/);
+        for (const block of blocks) {
+          if (!block.trim()) continue;
+          const lines = block.split("\n");
+          if (/^###\s/.test(block)) html += "<h3>" + inline(block.replace(/^###\s+/, "")) + "</h3>";
+          else if (/^##\s/.test(block)) html += "<h2>" + inline(block.replace(/^##\s+/, "")) + "</h2>";
+          else if (/^#\s/.test(block)) html += "<h1>" + inline(block.replace(/^#\s+/, "")) + "</h1>";
+          else if (/^>\s/.test(block)) html += "<blockquote>" + inline(lines.map((l) => l.replace(/^>\s?/, "")).join(" ")) + "</blockquote>";
+          else if (/^---+$/.test(block.trim())) html += "<hr />";
+          else if (lines.every((l) => /^[-*]\s/.test(l))) html += "<ul>" + lines.map((l) => "<li>" + inline(l.replace(/^[-*]\s+/, "")) + "</li>").join("") + "</ul>";
+          else if (lines.every((l) => /^\d+\.\s/.test(l))) html += "<ol>" + lines.map((l) => "<li>" + inline(l.replace(/^\d+\.\s+/, "")) + "</li>").join("") + "</ol>";
+          else html += "<p>" + inline(lines.join("<br />")) + "</p>";
+        }
+      }
+      return html;
+    }
+    function highlight(text, q) {
+      const query = q.trim();
+      if (!query) return esc(text);
+      const i = text.toLowerCase().indexOf(query.toLowerCase());
+      if (i < 0) return esc(text);
+      return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+    }
+    function uid() {
+      return (crypto.randomUUID && crypto.randomUUID()) || ("n" + Date.now() + Math.random().toString(16).slice(2));
+    }
 
-const now = Date.now();
-const seed = [
-  { id: "welcome", title: titleFrom(WELCOME), content: WELCOME, createdAt: now - 42 * 60000, updatedAt: now - 12 * 60000, tag: "說明", subtag: "入門", titleCustom: false },
-  { id: "morning", title: titleFrom(SAMPLE), content: SAMPLE, createdAt: now - 26 * 3600000, updatedAt: now - 5 * 3600000, tag: "隨筆", subtag: "晨間", titleCustom: false }
-];
-function load() {
-  try {
-    const data = JSON.parse(localStorage.getItem(STORAGE) || "null");
-    if (!data || !Array.isArray(data.notes)) return null;
-    return data;
-  } catch (e) { return null; }
-}
-function save() {
-  localStorage.setItem(STORAGE, JSON.stringify({ notes: state.notes, activeId: state.activeId, view: state.view }));
-}
-function normalize(note) {
-  note.tag = typeof note.tag === "string" ? note.tag : "";
-  note.subtag = typeof note.subtag === "string" ? note.subtag : "";
-  note.titleCustom = !!note.titleCustom;
-  return note;
-}
-const saved = load();
-const state = {
-  notes: (saved && saved.notes.length ? saved.notes : seed).map(normalize),
-  activeId: (saved && saved.activeId) || "welcome",
-  search: "",
-  tagFilter: "",
-  subtagFilter: "",
-  view: (saved && saved.view) || "split",
-  sidebarOpen: true,
-  focusMode: false,
-  lastDeleted: null,
-  shortcuts: false
-};
-function active() { return state.notes.find((n) => n.id === state.activeId) || null; }
-function filtered() {
-  const q = state.search.trim().toLowerCase();
-  return state.notes.slice().sort((a, b) => b.updatedAt - a.updatedAt).filter((n) => {
-    if (state.tagFilter === "未分類") { if (n.tag.trim()) return false; }
-    else if (state.tagFilter && n.tag.trim() !== state.tagFilter) return false;
-    if (state.subtagFilter && n.subtag.trim() !== state.subtagFilter) return false;
-    if (!q) return true;
-    return n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q) || n.tag.toLowerCase().includes(q) || n.subtag.toLowerCase().includes(q);
-  });
-}
-function resolvedView() { return state.view; }
-function createNote() {
-  const note = { id: uid(), title: "未命名筆記", content: "", createdAt: Date.now(), updatedAt: Date.now(), tag: "", subtag: "", titleCustom: false };
-  state.notes = [note].concat(state.notes);
-  state.activeId = note.id;
-  state.search = "";
-  state.focusMode = false;
-  if (!desktop()) state.sidebarOpen = false;
-  save();
-  render({ focusEditor: true });
-}
-function deleteNote(id) {
-  const target = state.notes.find((n) => n.id === id);
-  if (!target) return;
-  state.lastDeleted = target;
-  state.notes = state.notes.filter((n) => n.id !== id);
-  if (state.activeId === id) state.activeId = state.notes[0] ? state.notes[0].id : null;
-  save();
-  render();
-}
-function undo() {
-  if (!state.lastDeleted) return;
-  if (!state.notes.some((n) => n.id === state.lastDeleted.id)) state.notes = [state.lastDeleted].concat(state.notes);
-  state.activeId = state.lastDeleted.id;
-  state.lastDeleted = null;
-  save();
-  render();
-}
-function cycleView() {
-  const order = ["write", "split", "preview"];
-  state.view = order[(order.indexOf(state.view) + 1) % 3];
-  state.focusMode = false;
-  save();
-  render();
-}
-function setView(view) {
-  state.view = view;
-  state.focusMode = false;
-  save();
-  render();
-}
-
-function render(opts) {
-  opts = opts || {};
-  const root = document.getElementById("app");
-  const note = active();
-  const list = filtered();
-  const view = resolvedView();
-  const showSidebar = !state.focusMode && state.sidebarOpen;
-  const stacked = !desktop() && view === "split";
-  const listHtml = list.length === 0
-    ? '<div class="empty">' + icon.file + "<p>" + (state.notes.length === 0 ? "還沒有筆記" : "沒有符合的筆記") + "</p></div>"
-    : list.map(function (n) {
-        const label = n.title.trim() || "未命名筆記";
-        const tags = (n.tag.trim() || n.subtag.trim()) ? '<p class="tagline">' + esc(n.tag.trim() || "未分類") + (n.subtag.trim() ? " / " + esc(n.subtag.trim()) : "") + "</p>" : "";
-        return '<div class="note-item ' + (n.id === state.activeId ? "active" : "") + '" role="option" data-open="' + n.id + '"><div class="meta"><h3>' + highlight(label, state.search) + "</h3>" + tags + '<p class="snip">' + (snippetFrom(n.content) ? highlight(snippetFrom(n.content), state.search) : "空白筆記") + "</p><time>" + relTime(n.updatedAt) + '</time></div><button class="icon-btn del danger" data-del="' + n.id + '" aria-label="刪除">' + icon.trash + "</button></div>";
-      }).join("");
-  const panes = !note ? "" : (
-    '<div class="panes' + (stacked ? " stack" : "") + '">' +
-      (view !== "preview" ? '<div class="pane"><label class="sr" for="editor">筆記內容</label><textarea id="editor" class="editor" placeholder="開始寫作…">' + esc(note.content) + "</textarea></div>" : "") +
-      (view !== "write" ? '<div class="pane preview"><article class="prose">' + renderMd(note.content) + "</article></div>" : "") +
-    "</div>" +
-    (state.focusMode ? "" : '<footer class="status"><span>' + countWords(note.content) + " 字　/　最後編輯 " + relTime(note.updatedAt) + '</span><span class="hints">' + mod + " N 新增　" + mod + " E 預覽　? 快捷鍵</span></footer>")
-  );
-  const empty = '<div class="empty"><h2>紙上的空白，正等你寫下第一句。</h2><p>建立一則筆記，內容會保存在這部瀏覽器。</p><button class="primary" data-act="new">' + icon.plus + " 新增筆記</button></div>";
-  const viewButtons = ["write", "split", "preview"].map(function (id) {
-    const label = id === "write" ? "編輯" : id === "split" ? "並排" : "預覽";
-    return '<button type="button" role="radio" data-view="' + id + '" aria-checked="' + (view === id) + '">' + label + "</button>";
-  }).join("");
-  const toolbar = state.focusMode
-    ? '<div style="position:absolute;top:12px;right:12px;z-index:10"><button class="icon-btn" data-act="focus" aria-label="離開專注模式">' + icon.min + "</button></div>"
-    : '<header class="toolbar"><div class="toolbar-row"><button class="icon-btn" data-act="sidebar" aria-label="側邊欄">' + icon.panel + '</button><input id="title-input" class="title-input" aria-label="筆記名稱" maxlength="80" placeholder="未命名筆記" value="' + esc(note ? note.title : "") + '" ' + (note ? "" : "disabled") + ' /><button class="icon-btn" data-act="new" aria-label="新增筆記">' + icon.plus + '</button><button class="icon-btn" data-act="focus" aria-label="專注模式">' + icon.max + '</button><button class="icon-btn" data-act="help" aria-label="快捷鍵">' + icon.keys + '</button></div>' +
-      (note ? '<div class="toolbar-row"><div class="view-switch" role="radiogroup" aria-label="檢視">' + viewButtons + '</div><input id="tag-input" class="tag-input" aria-label="標籤" maxlength="24" placeholder="標籤" value="' + esc(note.tag) + '" /><input id="subtag-input" class="tag-input" aria-label="子標籤" maxlength="24" placeholder="子標籤" value="' + esc(note.subtag) + '"' + (note.tag.trim() ? "" : " disabled") + " /></div>" : "") +
-      "</header>";
-  const help = !state.shortcuts ? "" : (
-    '<div class="dialog-bg" data-act="help"><div class="dialog" data-stop="1"><h2>鍵盤快捷鍵</h2><p>在編輯時同樣可用。按 Esc 關閉。</p><ul>' +
-    [["新增筆記","N"],["搜尋筆記","K"],["循環編輯 / 並排 / 預覽","E"],["顯示或隱藏側邊欄","B"],["專注模式","\\"],["刪除目前筆記","⌫"]].map(function (row) {
-      return "<li><span>" + row[0] + "</span><span><kbd>" + mod + "</kbd> <kbd>" + row[1] + "</kbd></span></li>";
-    }).join("") +
-    "<li><span>開啟此說明</span><span><kbd>?</kbd></span></li></ul></div></div>"
-  );
-  const tags = [];
-  state.notes.forEach(function (n) { if (n.tag.trim() && tags.indexOf(n.tag.trim()) < 0) tags.push(n.tag.trim()); });
-  tags.sort(function (a, b) { return a.localeCompare(b, "zh-Hant"); });
-  const hasUntagged = state.notes.some(function (n) { return !n.tag.trim(); });
-  const subtags = [];
-  if (state.tagFilter && state.tagFilter !== "未分類") {
-    state.notes.forEach(function (n) {
-      if (n.tag.trim() === state.tagFilter && n.subtag.trim() && subtags.indexOf(n.subtag.trim()) < 0) subtags.push(n.subtag.trim());
-    });
-  }
-  const chips = (tags.length || hasUntagged)
-    ? '<div class="chips"><button class="chip' + (state.tagFilter ? "" : " active") + '" data-tag="">全部</button>' +
-      tags.map(function (tag) { return '<button class="chip' + (state.tagFilter === tag ? " active" : "") + '" data-tag="' + esc(tag) + '">' + esc(tag) + "</button>"; }).join("") +
-      (hasUntagged ? '<button class="chip' + (state.tagFilter === "未分類" ? " active" : "") + '" data-tag="未分類">未分類</button>' : "") +
-      "</div>" +
-      (subtags.length ? '<div class="chips">' + subtags.map(function (sub) { return '<button class="chip' + (state.subtagFilter === sub ? " active" : "") + '" data-sub="' + esc(sub) + '">' + esc(sub) + "</button>"; }).join("") + "</div>" : "")
-    : "";
-  root.innerHTML =
-    (showSidebar && !desktop() ? '<button class="backdrop" data-act="close-sidebar" aria-label="關閉側邊欄"></button>' : "") +
-    '<aside class="sidebar ' + (showSidebar ? "" : "closed") + '"><div class="brand"><div class="brand-text"><h1>墨箋</h1><p>本機筆記</p></div><button class="icon-btn close-mobile" data-act="close-sidebar" aria-label="關閉列表">' + icon.x + '</button><button class="icon-btn" data-act="new" aria-label="新增筆記">' + icon.plus + '</button></div><div class="search-wrap">' + icon.search + '<input id="search" type="search" placeholder="搜尋筆記" aria-label="搜尋筆記" value="' + esc(state.search) + '" /></div>' + chips + '<div class="list" role="listbox" aria-label="筆記列表">' + listHtml + "</div></aside>" +
-    '<main class="main">' + toolbar + (note ? panes : empty) + "</main>" +
-    help +
-    (state.lastDeleted ? '<div class="toast">已刪除筆記 <button data-act="undo">復原</button></div>' : "");
-  bind();
-  const editor = document.getElementById("editor");
-  if (opts.focusEditor && editor) {
-    editor.focus();
-    editor.selectionStart = editor.selectionEnd = editor.value.length;
-  }
-}
-function bind() {
-  document.querySelectorAll("[data-act]").forEach(function (el) {
-    el.addEventListener("click", function (e) {
-      if (el.getAttribute("data-stop")) return;
-      const act = el.getAttribute("data-act");
-      if (act === "new") createNote();
-      if (act === "sidebar") { state.sidebarOpen = !state.sidebarOpen; state.focusMode = false; render(); }
-      if (act === "close-sidebar") { state.sidebarOpen = false; render(); }
-      if (act === "focus") { state.focusMode = !state.focusMode; state.sidebarOpen = !state.focusMode; render(); }
-      if (act === "help") { state.shortcuts = !state.shortcuts; render(); }
-      if (act === "undo") undo();
-      e.stopPropagation();
-    });
-  });
-  document.querySelectorAll("[data-stop]").forEach(function (el) {
-    el.addEventListener("click", function (e) { e.stopPropagation(); });
-  });
-  document.querySelectorAll("[data-open]").forEach(function (el) {
-    el.addEventListener("click", function () {
-      state.activeId = el.getAttribute("data-open");
+    const now = Date.now();
+    const seed = [
+      { id: "welcome", title: titleFrom(WELCOME), content: WELCOME, createdAt: now - 42 * 60000, updatedAt: now - 12 * 60000, tag: "說明", subtag: "入門", titleCustom: false },
+      { id: "morning", title: titleFrom(SAMPLE), content: SAMPLE, createdAt: now - 26 * 3600000, updatedAt: now - 5 * 3600000, tag: "隨筆", subtag: "晨間", titleCustom: false }
+    ];
+    function load() {
+      try {
+        const data = JSON.parse(localStorage.getItem(STORAGE) || "null");
+        if (!data || !Array.isArray(data.notes)) return null;
+        return data;
+      } catch (e) { return null; }
+    }
+    function save() {
+      localStorage.setItem(STORAGE, JSON.stringify({ notes: state.notes, activeId: state.activeId, view: state.view }));
+    }
+    function normalize(note) {
+      note.tag = typeof note.tag === "string" ? note.tag : "";
+      note.subtag = typeof note.subtag === "string" ? note.subtag : "";
+      note.titleCustom = !!note.titleCustom;
+      return note;
+    }
+    const saved = load();
+    const state = {
+      notes: (saved && saved.notes.length ? saved.notes : seed).map(normalize),
+      activeId: (saved && saved.activeId) || "welcome",
+      search: "",
+      tagFilter: "",
+      subtagFilter: "",
+      view: (saved && saved.view) || "split",
+      sidebarOpen: true,
+      focusMode: false,
+      lastDeleted: null,
+      shortcuts: false
+    };
+    function active() { return state.notes.find((n) => n.id === state.activeId) || null; }
+    function filtered() {
+      const q = state.search.trim().toLowerCase();
+      return state.notes.slice().sort((a, b) => b.updatedAt - a.updatedAt).filter((n) => {
+        if (state.tagFilter === "未分類") { if (n.tag.trim()) return false; }
+        else if (state.tagFilter && n.tag.trim() !== state.tagFilter) return false;
+        if (state.subtagFilter && n.subtag.trim() !== state.subtagFilter) return false;
+        if (!q) return true;
+        return n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q) || n.tag.toLowerCase().includes(q) || n.subtag.toLowerCase().includes(q);
+      });
+    }
+    function resolvedView() { return state.view; }
+    function createNote() {
+      const note = { id: uid(), title: "未命名筆記", content: "", createdAt: Date.now(), updatedAt: Date.now(), tag: "", subtag: "", titleCustom: false };
+      state.notes = [note].concat(state.notes);
+      state.activeId = note.id;
+      state.search = "";
+      state.focusMode = false;
       if (!desktop()) state.sidebarOpen = false;
       save();
-      render();
-    });
-  });
-  document.querySelectorAll("[data-del]").forEach(function (el) {
-    el.addEventListener("click", function (e) {
-      e.stopPropagation();
-      deleteNote(el.getAttribute("data-del"));
-    });
-  });
-  document.querySelectorAll("[data-view]").forEach(function (el) {
-    el.addEventListener("click", function (e) {
-      e.stopPropagation();
-      setView(el.getAttribute("data-view"));
-    });
-  });
-  document.querySelectorAll("[data-tag]").forEach(function (el) {
-    el.addEventListener("click", function (e) {
-      e.stopPropagation();
-      const tag = el.getAttribute("data-tag") || "";
-      state.tagFilter = state.tagFilter === tag ? "" : tag;
-      state.subtagFilter = "";
-      render();
-    });
-  });
-  document.querySelectorAll("[data-sub]").forEach(function (el) {
-    el.addEventListener("click", function (e) {
-      e.stopPropagation();
-      const sub = el.getAttribute("data-sub") || "";
-      state.subtagFilter = state.subtagFilter === sub ? "" : sub;
-      render();
-    });
-  });
-  const titleInput = document.getElementById("title-input");
-  if (titleInput && active()) {
-    titleInput.addEventListener("input", function () {
-      const note = active();
-      if (!note) return;
-      note.title = titleInput.value.slice(0, 80);
-      note.titleCustom = true;
-      note.updatedAt = Date.now();
-      save();
-      const h3 = document.querySelector(".note-item.active h3");
-      if (h3) h3.textContent = note.title.trim() || "未命名筆記";
-    });
-    titleInput.addEventListener("blur", function () {
-      const note = active();
-      if (!note || !note.titleCustom) return;
-      const trimmed = note.title.trim().slice(0, 80);
-      if (!trimmed) {
-        note.title = titleFrom(note.content);
-        note.titleCustom = false;
-      } else note.title = trimmed;
+      render({ focusEditor: true });
+    }
+    function deleteNote(id) {
+      const target = state.notes.find((n) => n.id === id);
+      if (!target) return;
+      state.lastDeleted = target;
+      state.notes = state.notes.filter((n) => n.id !== id);
+      if (state.activeId === id) state.activeId = state.notes[0] ? state.notes[0].id : null;
       save();
       render();
-    });
-  }
-  const tagInput = document.getElementById("tag-input");
-  const subtagInput = document.getElementById("subtag-input");
-  if (tagInput && active()) {
-    tagInput.addEventListener("input", function () {
-      const note = active();
-      if (!note) return;
-      note.tag = tagInput.value.slice(0, 24);
-      if (!note.tag.trim()) note.subtag = "";
-      note.updatedAt = Date.now();
-      save();
-      if (subtagInput) subtagInput.disabled = !note.tag.trim();
-    });
-    tagInput.addEventListener("blur", function () {
-      const note = active();
-      if (!note) return;
-      note.tag = note.tag.trim().slice(0, 24);
-      note.subtag = note.tag ? note.subtag.trim().slice(0, 24) : "";
+    }
+    function undo() {
+      if (!state.lastDeleted) return;
+      if (!state.notes.some((n) => n.id === state.lastDeleted.id)) state.notes = [state.lastDeleted].concat(state.notes);
+      state.activeId = state.lastDeleted.id;
+      state.lastDeleted = null;
       save();
       render();
-    });
-  }
-  if (subtagInput && active()) {
-    subtagInput.addEventListener("input", function () {
-      const note = active();
-      if (!note) return;
-      note.subtag = subtagInput.value.slice(0, 24);
-      note.updatedAt = Date.now();
-      save();
-    });
-    subtagInput.addEventListener("blur", function () {
-      const note = active();
-      if (!note) return;
-      note.subtag = note.tag.trim() ? note.subtag.trim().slice(0, 24) : "";
+    }
+    function cycleView() {
+      const order = ["write", "split", "preview"];
+      state.view = order[(order.indexOf(state.view) + 1) % 3];
+      state.focusMode = false;
       save();
       render();
-    });
-  }
-  const search = document.getElementById("search");
-  if (search) {
-    search.addEventListener("input", function () {
-      state.search = search.value;
-      render();
-      const next = document.getElementById("search");
-      if (next) { next.focus(); next.setSelectionRange(state.search.length, state.search.length); }
-    });
-  }
-  const editor = document.getElementById("editor");
-  if (editor) {
-    editor.addEventListener("input", function () {
-      const note = active();
-      if (!note) return;
-      note.content = editor.value;
-      if (!note.titleCustom) note.title = titleFrom(note.content);
-      note.updatedAt = Date.now();
+    }
+    function setView(view) {
+      state.view = view;
+      state.focusMode = false;
       save();
-      const item = document.querySelector(".note-item.active");
-      if (item) {
-        item.querySelector("h3").textContent = (note.title.trim() || "未命名筆記");
-        item.querySelector(".snip").textContent = snippetFrom(note.content) || "空白筆記";
-        item.querySelector("time").textContent = relTime(note.updatedAt);
+      render();
+    }
+
+    function render(opts) {
+      opts = opts || {};
+      const root = document.getElementById("app");
+      const note = active();
+      const list = filtered();
+      const view = resolvedView();
+      const showSidebar = !state.focusMode && state.sidebarOpen;
+      const stacked = !desktop() && view === "split";
+      const listHtml = list.length === 0
+        ? '<div class="empty">' + icon.file + "<p>" + (state.notes.length === 0 ? "還沒有筆記" : "沒有符合的筆記") + "</p></div>"
+        : list.map(function (n) {
+          const label = n.title.trim() || "未命名筆記";
+          const tags = (n.tag.trim() || n.subtag.trim()) ? '<p class="tagline">' + esc(n.tag.trim() || "未分類") + (n.subtag.trim() ? " / " + esc(n.subtag.trim()) : "") + "</p>" : "";
+          return '<div class="note-item ' + (n.id === state.activeId ? "active" : "") + '" role="option" data-open="' + n.id + '"><div class="meta"><h3>' + highlight(label, state.search) + "</h3>" + tags + '<p class="snip">' + (snippetFrom(n.content) ? highlight(snippetFrom(n.content), state.search) : "空白筆記") + "</p><time>" + relTime(n.updatedAt) + '</time></div><button class="icon-btn del danger" data-del="' + n.id + '" aria-label="刪除">' + icon.trash + "</button></div>";
+        }).join("");
+      const panes = !note ? "" : (
+        '<div class="panes' + (stacked ? " stack" : "") + '">' +
+        (view !== "preview" ? '<div class="pane"><label class="sr" for="editor">筆記內容</label><textarea id="editor" class="editor" placeholder="開始寫作…">' + esc(note.content) + "</textarea></div>" : "") +
+        (view !== "write" ? '<div class="pane preview"><article class="prose">' + renderMd(note.content) + "</article></div>" : "") +
+        "</div>" +
+        (state.focusMode ? "" : '<footer class="status"><span>' + countWords(note.content) + " 字　/　最後編輯 " + relTime(note.updatedAt) + '</span><span class="hints">' + mod + " N 新增　" + mod + " E 預覽　? 快捷鍵</span></footer>")
+      );
+      const empty = '<div class="empty"><h2>紙上的空白，正等你寫下第一句。</h2><p>建立一則筆記，內容會保存在這部瀏覽器。</p><button class="primary" data-act="new">' + icon.plus + " 新增筆記</button></div>";
+      const viewButtons = ["write", "split", "preview"].map(function (id) {
+        const label = id === "write" ? "編輯" : id === "split" ? "並排" : "預覽";
+        return '<button type="button" role="radio" data-view="' + id + '" aria-checked="' + (view === id) + '">' + label + "</button>";
+      }).join("");
+      const toolbar = state.focusMode
+        ? '<div style="position:absolute;top:12px;right:12px;z-index:10"><button class="icon-btn" data-act="focus" aria-label="離開專注模式">' + icon.min + "</button></div>"
+        : '<header class="toolbar"><div class="toolbar-row"><button class="icon-btn" data-act="sidebar" aria-label="側邊欄">' + icon.panel + '</button><input id="title-input" class="title-input" aria-label="筆記名稱" maxlength="80" placeholder="未命名筆記" value="' + esc(note ? note.title : "") + '" ' + (note ? "" : "disabled") + ' /><button class="icon-btn" data-act="new" aria-label="新增筆記">' + icon.plus + '</button><button class="icon-btn" data-act="focus" aria-label="專注模式">' + icon.max + '</button><button class="icon-btn" data-act="help" aria-label="快捷鍵">' + icon.keys + '</button></div>' +
+        (note ? '<div class="toolbar-row"><div class="view-switch" role="radiogroup" aria-label="檢視">' + viewButtons + '</div><input id="tag-input" class="tag-input" aria-label="標籤" maxlength="24" placeholder="標籤" value="' + esc(note.tag) + '" /><input id="subtag-input" class="tag-input" aria-label="子標籤" maxlength="24" placeholder="子標籤" value="' + esc(note.subtag) + '"' + (note.tag.trim() ? "" : " disabled") + " /></div>" : "") +
+        "</header>";
+      const help = !state.shortcuts ? "" : (
+        '<div class="dialog-bg" data-act="help"><div class="dialog" data-stop="1"><h2>鍵盤快捷鍵</h2><p>在編輯時同樣可用。按 Esc 關閉。</p><ul>' +
+        [["新增筆記", "N"], ["搜尋筆記", "K"], ["循環編輯 / 並排 / 預覽", "E"], ["顯示或隱藏側邊欄", "B"], ["專注模式", "\\"], ["刪除目前筆記", "⌫"]].map(function (row) {
+          return "<li><span>" + row[0] + "</span><span><kbd>" + mod + "</kbd> <kbd>" + row[1] + "</kbd></span></li>";
+        }).join("") +
+        "<li><span>開啟此說明</span><span><kbd>?</kbd></span></li></ul></div></div>"
+      );
+      const tags = [];
+      state.notes.forEach(function (n) { if (n.tag.trim() && tags.indexOf(n.tag.trim()) < 0) tags.push(n.tag.trim()); });
+      tags.sort(function (a, b) { return a.localeCompare(b, "zh-Hant"); });
+      const hasUntagged = state.notes.some(function (n) { return !n.tag.trim(); });
+      const subtags = [];
+      if (state.tagFilter && state.tagFilter !== "未分類") {
+        state.notes.forEach(function (n) {
+          if (n.tag.trim() === state.tagFilter && n.subtag.trim() && subtags.indexOf(n.subtag.trim()) < 0) subtags.push(n.subtag.trim());
+        });
       }
-      const title = document.getElementById("title-input");
-      if (title && document.activeElement !== title) title.value = note.title;
-      const preview = document.querySelector(".prose");
-      if (preview) preview.innerHTML = renderMd(note.content);
-      const status = document.querySelector(".status span");
-      if (status) status.textContent = countWords(note.content) + " 字　/　最後編輯 " + relTime(note.updatedAt);
-    });
-    editor.addEventListener("keydown", function (e) {
-      if (e.key === "Tab") {
-        e.preventDefault();
-        const s = editor.selectionStart, end = editor.selectionEnd;
-        editor.setRangeText("  ", s, end, "end");
-        editor.dispatchEvent(new Event("input"));
+      const chips = (tags.length || hasUntagged)
+        ? '<div class="chips"><button class="chip' + (state.tagFilter ? "" : " active") + '" data-tag="">全部</button>' +
+        tags.map(function (tag) { return '<button class="chip' + (state.tagFilter === tag ? " active" : "") + '" data-tag="' + esc(tag) + '">' + esc(tag) + "</button>"; }).join("") +
+        (hasUntagged ? '<button class="chip' + (state.tagFilter === "未分類" ? " active" : "") + '" data-tag="未分類">未分類</button>' : "") +
+        "</div>" +
+        (subtags.length ? '<div class="chips">' + subtags.map(function (sub) { return '<button class="chip' + (state.subtagFilter === sub ? " active" : "") + '" data-sub="' + esc(sub) + '">' + esc(sub) + "</button>"; }).join("") + "</div>" : "")
+        : "";
+      root.innerHTML =
+        (showSidebar && !desktop() ? '<button class="backdrop" data-act="close-sidebar" aria-label="關閉側邊欄"></button>' : "") +
+        '<aside class="sidebar ' + (showSidebar ? "" : "closed") + '"><div class="brand"><div class="brand-text"><h1>墨箋</h1><p>本機筆記</p></div><button class="icon-btn close-mobile" data-act="close-sidebar" aria-label="關閉列表">' + icon.x + '</button><button class="icon-btn" data-act="new" aria-label="新增筆記">' + icon.plus + '</button></div><div class="search-wrap">' + icon.search + '<input id="search" type="search" placeholder="搜尋筆記" aria-label="搜尋筆記" value="' + esc(state.search) + '" /></div>' + chips + '<div class="list" role="listbox" aria-label="筆記列表">' + listHtml + "</div></aside>" +
+        '<main class="main">' + toolbar + (note ? panes : empty) + "</main>" +
+        help +
+        (state.lastDeleted ? '<div class="toast">已刪除筆記 <button data-act="undo">復原</button></div>' : "");
+      bind();
+      const editor = document.getElementById("editor");
+      if (opts.focusEditor && editor) {
+        editor.focus();
+        editor.selectionStart = editor.selectionEnd = editor.value.length;
       }
+    }
+    function bind() {
+      document.querySelectorAll("[data-act]").forEach(function (el) {
+        el.addEventListener("click", function (e) {
+          if (el.getAttribute("data-stop")) return;
+          const act = el.getAttribute("data-act");
+          if (act === "new") createNote();
+          if (act === "sidebar") { state.sidebarOpen = !state.sidebarOpen; state.focusMode = false; render(); }
+          if (act === "close-sidebar") { state.sidebarOpen = false; render(); }
+          if (act === "focus") { state.focusMode = !state.focusMode; state.sidebarOpen = !state.focusMode; render(); }
+          if (act === "help") { state.shortcuts = !state.shortcuts; render(); }
+          if (act === "undo") undo();
+          e.stopPropagation();
+        });
+      });
+      document.querySelectorAll("[data-stop]").forEach(function (el) {
+        el.addEventListener("click", function (e) { e.stopPropagation(); });
+      });
+      document.querySelectorAll("[data-open]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          state.activeId = el.getAttribute("data-open");
+          if (!desktop()) state.sidebarOpen = false;
+          save();
+          render();
+        });
+      });
+      document.querySelectorAll("[data-del]").forEach(function (el) {
+        el.addEventListener("click", function (e) {
+          e.stopPropagation();
+          deleteNote(el.getAttribute("data-del"));
+        });
+      });
+      document.querySelectorAll("[data-view]").forEach(function (el) {
+        el.addEventListener("click", function (e) {
+          e.stopPropagation();
+          setView(el.getAttribute("data-view"));
+        });
+      });
+      document.querySelectorAll("[data-tag]").forEach(function (el) {
+        el.addEventListener("click", function (e) {
+          e.stopPropagation();
+          const tag = el.getAttribute("data-tag") || "";
+          state.tagFilter = state.tagFilter === tag ? "" : tag;
+          state.subtagFilter = "";
+          render();
+        });
+      });
+      document.querySelectorAll("[data-sub]").forEach(function (el) {
+        el.addEventListener("click", function (e) {
+          e.stopPropagation();
+          const sub = el.getAttribute("data-sub") || "";
+          state.subtagFilter = state.subtagFilter === sub ? "" : sub;
+          render();
+        });
+      });
+      const titleInput = document.getElementById("title-input");
+      if (titleInput && active()) {
+        titleInput.addEventListener("input", function () {
+          const note = active();
+          if (!note) return;
+          note.title = titleInput.value.slice(0, 80);
+          note.titleCustom = true;
+          note.updatedAt = Date.now();
+          save();
+          const h3 = document.querySelector(".note-item.active h3");
+          if (h3) h3.textContent = note.title.trim() || "未命名筆記";
+        });
+        titleInput.addEventListener("blur", function () {
+          const note = active();
+          if (!note || !note.titleCustom) return;
+          const trimmed = note.title.trim().slice(0, 80);
+          if (!trimmed) {
+            note.title = titleFrom(note.content);
+            note.titleCustom = false;
+          } else note.title = trimmed;
+          save();
+          render();
+        });
+      }
+      const tagInput = document.getElementById("tag-input");
+      const subtagInput = document.getElementById("subtag-input");
+      if (tagInput && active()) {
+        tagInput.addEventListener("input", function () {
+          const note = active();
+          if (!note) return;
+          note.tag = tagInput.value.slice(0, 24);
+          if (!note.tag.trim()) note.subtag = "";
+          note.updatedAt = Date.now();
+          save();
+          if (subtagInput) subtagInput.disabled = !note.tag.trim();
+        });
+        tagInput.addEventListener("blur", function () {
+          const note = active();
+          if (!note) return;
+          note.tag = note.tag.trim().slice(0, 24);
+          note.subtag = note.tag ? note.subtag.trim().slice(0, 24) : "";
+          save();
+          render();
+        });
+      }
+      if (subtagInput && active()) {
+        subtagInput.addEventListener("input", function () {
+          const note = active();
+          if (!note) return;
+          note.subtag = subtagInput.value.slice(0, 24);
+          note.updatedAt = Date.now();
+          save();
+        });
+        subtagInput.addEventListener("blur", function () {
+          const note = active();
+          if (!note) return;
+          note.subtag = note.tag.trim() ? note.subtag.trim().slice(0, 24) : "";
+          save();
+          render();
+        });
+      }
+      const search = document.getElementById("search");
+      if (search) {
+        search.addEventListener("input", function () {
+          state.search = search.value;
+          render();
+          const next = document.getElementById("search");
+          if (next) { next.focus(); next.setSelectionRange(state.search.length, state.search.length); }
+        });
+      }
+      const editor = document.getElementById("editor");
+      if (editor) {
+        editor.addEventListener("input", function () {
+          const note = active();
+          if (!note) return;
+          note.content = editor.value;
+          if (!note.titleCustom) note.title = titleFrom(note.content);
+          note.updatedAt = Date.now();
+          save();
+          const item = document.querySelector(".note-item.active");
+          if (item) {
+            item.querySelector("h3").textContent = (note.title.trim() || "未命名筆記");
+            item.querySelector(".snip").textContent = snippetFrom(note.content) || "空白筆記";
+            item.querySelector("time").textContent = relTime(note.updatedAt);
+          }
+          const title = document.getElementById("title-input");
+          if (title && document.activeElement !== title) title.value = note.title;
+          const preview = document.querySelector(".prose");
+          if (preview) preview.innerHTML = renderMd(note.content);
+          const status = document.querySelector(".status span");
+          if (status) status.textContent = countWords(note.content) + " 字　/　最後編輯 " + relTime(note.updatedAt);
+        });
+        editor.addEventListener("keydown", function (e) {
+          if (e.key === "Tab") {
+            e.preventDefault();
+            const s = editor.selectionStart, end = editor.selectionEnd;
+            editor.setRangeText("  ", s, end, "end");
+            editor.dispatchEvent(new Event("input"));
+          }
+        });
+      }
+    }
+    document.addEventListener("keydown", function (e) {
+      const t = e.target;
+      const inField = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA");
+      const meta = e.metaKey || e.ctrlKey;
+      if (e.key === "Escape") {
+        if (state.shortcuts) { state.shortcuts = false; render(); return; }
+        if (state.focusMode) { state.focusMode = false; state.sidebarOpen = true; render(); return; }
+        if (!desktop() && state.sidebarOpen) { state.sidebarOpen = false; render(); }
+        return;
+      }
+      if (!inField && e.key === "?") { e.preventDefault(); state.shortcuts = !state.shortcuts; render(); return; }
+      if (!inField && e.key === "/" && !meta) { e.preventDefault(); state.sidebarOpen = true; render(); var s = document.getElementById("search"); if (s) s.focus(); return; }
+      if (!meta) return;
+      const k = e.key.toLowerCase();
+      if (k === "n") { e.preventDefault(); createNote(); }
+      if (k === "k") { e.preventDefault(); state.sidebarOpen = true; render(); var s2 = document.getElementById("search"); if (s2) s2.focus(); }
+      if (k === "e") { e.preventDefault(); cycleView(); }
+      if (k === "b") { e.preventDefault(); state.sidebarOpen = !state.sidebarOpen; state.focusMode = false; render(); }
+      if (e.key === "\\") { e.preventDefault(); state.focusMode = !state.focusMode; state.sidebarOpen = !state.focusMode; render(); }
+      if (e.key === "Backspace" && (!inField || e.shiftKey) && active()) { e.preventDefault(); deleteNote(active().id); }
     });
-  }
-}
-document.addEventListener("keydown", function (e) {
-  const t = e.target;
-  const inField = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA");
-  const meta = e.metaKey || e.ctrlKey;
-  if (e.key === "Escape") {
-    if (state.shortcuts) { state.shortcuts = false; render(); return; }
-    if (state.focusMode) { state.focusMode = false; state.sidebarOpen = true; render(); return; }
-    if (!desktop() && state.sidebarOpen) { state.sidebarOpen = false; render(); }
-    return;
-  }
-  if (!inField && e.key === "?") { e.preventDefault(); state.shortcuts = !state.shortcuts; render(); return; }
-  if (!inField && e.key === "/" && !meta) { e.preventDefault(); state.sidebarOpen = true; render(); var s = document.getElementById("search"); if (s) s.focus(); return; }
-  if (!meta) return;
-  const k = e.key.toLowerCase();
-  if (k === "n") { e.preventDefault(); createNote(); }
-  if (k === "k") { e.preventDefault(); state.sidebarOpen = true; render(); var s2 = document.getElementById("search"); if (s2) s2.focus(); }
-  if (k === "e") { e.preventDefault(); cycleView(); }
-  if (k === "b") { e.preventDefault(); state.sidebarOpen = !state.sidebarOpen; state.focusMode = false; render(); }
-  if (e.key === "\\") { e.preventDefault(); state.focusMode = !state.focusMode; state.sidebarOpen = !state.focusMode; render(); }
-  if (e.key === "Backspace" && (!inField || e.shiftKey) && active()) { e.preventDefault(); deleteNote(active().id); }
-});
-window.addEventListener("resize", function () { render(); });
-render();
+    window.addEventListener("resize", function () { render(); });
+    render();
   </script>
 </body>
+
 </html>
