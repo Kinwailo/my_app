@@ -394,6 +394,10 @@
             const [userInfo, setUserInfo] = React.useState(null);
             const [isSyncing, setIsSyncing] = React.useState(false);
 
+            // Cloud file ID cache & debounce refs
+            const cloudFileIdRef = React.useRef(null);
+            const syncTimeoutRef = React.useRef(null);
+
             // Notes State
             const [localNotes, setLocalNotes] = React.useState(() => {
                 const saved = localStorage.getItem('zen_notes_local_data');
@@ -417,6 +421,17 @@
                 else setActiveCloudNoteId(id);
             };
 
+            const triggerCloudSave = (notesToSave, token) => {
+                if (!token) return;
+                setIsSyncing(true);
+                if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+
+                // Debounce 1.2s to prevent Google Drive API rate limits
+                syncTimeoutRef.current = setTimeout(() => {
+                    saveCloudNotesToDrive(notesToSave, token);
+                }, 1200);
+            };
+
             const setNotes = (updater) => {
                 if (workspace === 'local') {
                     setLocalNotes(prev => typeof updater === 'function' ? updater(prev) : updater);
@@ -424,7 +439,7 @@
                     setCloudNotes(prev => {
                         const nextCloudNotes = typeof updater === 'function' ? updater(prev) : updater;
                         if (accessToken) {
-                            saveCloudNotesToDrive(nextCloudNotes, accessToken);
+                            triggerCloudSave(nextCloudNotes, accessToken);
                         }
                         if (userInfo?.email) {
                             localStorage.setItem(`zen_notes_cloud_data_${userInfo.email}`, JSON.stringify(nextCloudNotes));
@@ -655,13 +670,33 @@
                 if (!token) return;
                 setIsSyncing(true);
                 try {
-                    const query = encodeURIComponent("name='zen_notes_backup.json' and trashed=false");
-                    const listRes = await fetch(
-                        `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}`,
-                        { headers: { Authorization: `Bearer ${token}` } }
-                    );
-                    const listData = await listRes.json();
-                    const existingFile = listData.files && listData.files[0];
+                    let fileId = cloudFileIdRef.current;
+
+                    // If fileId is not cached, search for existing backup file
+                    if (!fileId) {
+                        const query = encodeURIComponent("name='zen_notes_backup.json' and trashed=false");
+                        const listRes = await fetch(
+                            `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}&orderBy=createdTime desc`,
+                            { headers: { Authorization: `Bearer ${token}` } }
+                        );
+                        if (listRes.ok) {
+                            const listData = await listRes.json();
+                            if (listData.files && listData.files.length > 0) {
+                                fileId = listData.files[0].id;
+                                cloudFileIdRef.current = fileId;
+
+                                // Clean up older duplicate backup files if any
+                                if (listData.files.length > 1) {
+                                    for (let i = 1; i < listData.files.length; i++) {
+                                        fetch(`https://www.googleapis.com/drive/v3/files/${listData.files[i].id}`, {
+                                            method: 'DELETE',
+                                            headers: { Authorization: `Bearer ${token}` }
+                                        }).catch(() => {});
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     const backupPayload = JSON.stringify({
                         appName: "ZenNotes",
@@ -670,9 +705,8 @@
                         notes: notesToSave
                     }, null, 2);
 
-                    if (existingFile) {
-                        // 使用單純的 media update API 進行內容覆蓋，確保 100% 穩定
-                        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`, {
+                    if (fileId) {
+                        const updateRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
                             method: 'PATCH',
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -680,6 +714,7 @@
                             },
                             body: backupPayload
                         });
+                        if (!updateRes.ok) throw new Error('Update failed');
                     } else {
                         const metadata = {
                             name: 'zen_notes_backup.json',
@@ -696,7 +731,7 @@
                             `${backupPayload}\r\n` +
                             `--${delimiter}--`;
 
-                        await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                        const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                             method: 'POST',
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -704,6 +739,11 @@
                             },
                             body: multipartBody
                         });
+                        if (!createRes.ok) throw new Error('Create failed');
+                        const createdData = await createRes.json();
+                        if (createdData.id) {
+                            cloudFileIdRef.current = createdData.id;
+                        }
                     }
                 } catch (err) {
                     console.error('Google Drive sync error', err);
@@ -716,25 +756,10 @@
             const fetchCloudNotesFromDrive = async (token, userEmail) => {
                 setIsSyncing(true);
 
-                // 1. 優先嘗試從本機快取載入，加速畫面顯示並作為保底備份
-                let cached = null;
-                if (userEmail) {
-                    const localSaved = localStorage.getItem(`zen_notes_cloud_data_${userEmail}`);
-                    if (localSaved) {
-                        try {
-                            cached = JSON.parse(localSaved);
-                            if (Array.isArray(cached) && cached.length > 0) {
-                                setCloudNotes(cached);
-                                setActiveCloudNoteId(cached[0]?.id || null);
-                            }
-                        } catch (e) {}
-                    }
-                }
-
                 try {
                     const query = encodeURIComponent("name='zen_notes_backup.json' and trashed=false");
                     const listRes = await fetch(
-                        `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}`,
+                        `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}&orderBy=createdTime desc`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
 
@@ -743,38 +768,40 @@
                     }
 
                     const listData = await listRes.json();
-                    const existingFile = listData.files && listData.files[0];
+                    const files = listData.files || [];
 
-                    if (existingFile) {
-                        const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`, {
+                    if (files.length > 0) {
+                        const targetFile = files[0];
+                        cloudFileIdRef.current = targetFile.id;
+
+                        const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${targetFile.id}?alt=media`, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
                         if (fileRes.ok) {
                             const backupData = await fileRes.json();
-                            if (backupData && Array.isArray(backupData.notes)) {
+                            if (backupData && Array.isArray(backupData.notes) && backupData.notes.length > 0) {
                                 setCloudNotes(backupData.notes);
                                 setActiveCloudNoteId(backupData.notes[0]?.id || null);
                                 if (userEmail) {
                                     localStorage.setItem(`zen_notes_cloud_data_${userEmail}`, JSON.stringify(backupData.notes));
                                 }
+                                return;
                             }
                         }
-                    } else {
-                        // 雲端若無備份，優先將本機已有資料同步上去；若完全無資料才初始化預設筆記
-                        if (cached && cached.length > 0) {
-                            await saveCloudNotesToDrive(cached, token);
-                        } else {
-                            const newAccountDefaultNotes = DEFAULT_CLOUD_NOTES.map(note => ({
-                                ...note,
-                                id: 'cloud-' + Date.now(),
-                                updatedAt: Date.now()
-                            }));
-                            setCloudNotes(newAccountDefaultNotes);
-                            setActiveCloudNoteId(newAccountDefaultNotes[0]?.id || null);
-                            await saveCloudNotesToDrive(newAccountDefaultNotes, token);
-                            if (userEmail) {
-                                localStorage.setItem(`zen_notes_cloud_data_${userEmail}`, JSON.stringify(newAccountDefaultNotes));
-                            }
+                    }
+
+                    // Create defaults only when 0 files exist on Drive
+                    if (files.length === 0) {
+                        const newAccountDefaultNotes = DEFAULT_CLOUD_NOTES.map(note => ({
+                            ...note,
+                            id: 'cloud-' + Date.now(),
+                            updatedAt: Date.now()
+                        }));
+                        setCloudNotes(newAccountDefaultNotes);
+                        setActiveCloudNoteId(newAccountDefaultNotes[0]?.id || null);
+                        await saveCloudNotesToDrive(newAccountDefaultNotes, token);
+                        if (userEmail) {
+                            localStorage.setItem(`zen_notes_cloud_data_${userEmail}`, JSON.stringify(newAccountDefaultNotes));
                         }
                     }
                 } catch (err) {
