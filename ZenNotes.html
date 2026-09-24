@@ -655,8 +655,9 @@
                 if (!token) return;
                 setIsSyncing(true);
                 try {
+                    const query = encodeURIComponent("name='zen_notes_backup.json' and trashed=false");
                     const listRes = await fetch(
-                        "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='zen_notes_backup.json'+and+'appDataFolder'+in+parents",
+                        `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
                     const listData = await listRes.json();
@@ -670,13 +671,14 @@
                     }, null, 2);
 
                     if (existingFile) {
-                        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=multipart`, {
+                        // 使用單純的 media update API 進行內容覆蓋，確保 100% 穩定
+                        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`, {
                             method: 'PATCH',
                             headers: {
                                 Authorization: `Bearer ${token}`,
-                                'Content-Type': 'multipart/related; boundary=zen_notes_boundary'
+                                'Content-Type': 'application/json'
                             },
-                            body: `--zen_notes_boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: 'zen_notes_backup.json' })}\r\n--zen_notes_boundary\r\nContent-Type: application/json\r\n\r\n${backupPayload}\r\n--zen_notes_boundary--`
+                            body: backupPayload
                         });
                     } else {
                         const metadata = {
@@ -684,13 +686,23 @@
                             mimeType: 'application/json',
                             parents: ['appDataFolder']
                         };
+                        const delimiter = 'zen_notes_boundary';
+                        const multipartBody = 
+                            `--${delimiter}\r\n` +
+                            `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+                            `${JSON.stringify(metadata)}\r\n` +
+                            `--${delimiter}\r\n` +
+                            `Content-Type: application/json\r\n\r\n` +
+                            `${backupPayload}\r\n` +
+                            `--${delimiter}--`;
+
                         await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                             method: 'POST',
                             headers: {
                                 Authorization: `Bearer ${token}`,
-                                'Content-Type': 'multipart/related; boundary=zen_notes_boundary'
+                                'Content-Type': `multipart/related; boundary=${delimiter}`
                             },
-                            body: `--zen_notes_boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--zen_notes_boundary\r\nContent-Type: application/json\r\n\r\n${backupPayload}\r\n--zen_notes_boundary--`
+                            body: multipartBody
                         });
                     }
                 } catch (err) {
@@ -703,11 +715,33 @@
 
             const fetchCloudNotesFromDrive = async (token, userEmail) => {
                 setIsSyncing(true);
+
+                // 1. 優先嘗試從本機快取載入，加速畫面顯示並作為保底備份
+                let cached = null;
+                if (userEmail) {
+                    const localSaved = localStorage.getItem(`zen_notes_cloud_data_${userEmail}`);
+                    if (localSaved) {
+                        try {
+                            cached = JSON.parse(localSaved);
+                            if (Array.isArray(cached) && cached.length > 0) {
+                                setCloudNotes(cached);
+                                setActiveCloudNoteId(cached[0]?.id || null);
+                            }
+                        } catch (e) {}
+                    }
+                }
+
                 try {
+                    const query = encodeURIComponent("name='zen_notes_backup.json' and trashed=false");
                     const listRes = await fetch(
-                        "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='zen_notes_backup.json'+and+'appDataFolder'+in+parents",
+                        `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
+
+                    if (!listRes.ok) {
+                        throw new Error(`Drive query failed with status ${listRes.status}`);
+                    }
+
                     const listData = await listRes.json();
                     const existingFile = listData.files && listData.files[0];
 
@@ -715,26 +749,32 @@
                         const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
-                        const backupData = await fileRes.json();
-                        if (backupData && Array.isArray(backupData.notes)) {
-                            setCloudNotes(backupData.notes);
-                            setActiveCloudNoteId(backupData.notes[0]?.id || null);
-                            if (userEmail) {
-                                localStorage.setItem(`zen_notes_cloud_data_${userEmail}`, JSON.stringify(backupData.notes));
+                        if (fileRes.ok) {
+                            const backupData = await fileRes.json();
+                            if (backupData && Array.isArray(backupData.notes)) {
+                                setCloudNotes(backupData.notes);
+                                setActiveCloudNoteId(backupData.notes[0]?.id || null);
+                                if (userEmail) {
+                                    localStorage.setItem(`zen_notes_cloud_data_${userEmail}`, JSON.stringify(backupData.notes));
+                                }
                             }
                         }
                     } else {
-                        // 新帳號無備份檔，預設全新的乾淨雲端筆記
-                        const newAccountDefaultNotes = DEFAULT_CLOUD_NOTES.map(note => ({
-                            ...note,
-                            id: 'cloud-' + Date.now(),
-                            updatedAt: Date.now()
-                        }));
-                        setCloudNotes(newAccountDefaultNotes);
-                        setActiveCloudNoteId(newAccountDefaultNotes[0]?.id || null);
-                        await saveCloudNotesToDrive(newAccountDefaultNotes, token);
-                        if (userEmail) {
-                            localStorage.setItem(`zen_notes_cloud_data_${userEmail}`, JSON.stringify(newAccountDefaultNotes));
+                        // 雲端若無備份，優先將本機已有資料同步上去；若完全無資料才初始化預設筆記
+                        if (cached && cached.length > 0) {
+                            await saveCloudNotesToDrive(cached, token);
+                        } else {
+                            const newAccountDefaultNotes = DEFAULT_CLOUD_NOTES.map(note => ({
+                                ...note,
+                                id: 'cloud-' + Date.now(),
+                                updatedAt: Date.now()
+                            }));
+                            setCloudNotes(newAccountDefaultNotes);
+                            setActiveCloudNoteId(newAccountDefaultNotes[0]?.id || null);
+                            await saveCloudNotesToDrive(newAccountDefaultNotes, token);
+                            if (userEmail) {
+                                localStorage.setItem(`zen_notes_cloud_data_${userEmail}`, JSON.stringify(newAccountDefaultNotes));
+                            }
                         }
                     }
                 } catch (err) {
@@ -795,9 +835,7 @@
                 if (accessToken && window.google?.accounts?.oauth2) {
                     window.google.accounts.oauth2.revoke(accessToken, () => {});
                 }
-                if (userInfo?.email) {
-                    localStorage.removeItem(`zen_notes_cloud_data_${userInfo.email}`);
-                }
+                // 保留該帳號的本地 localStorage 快取，防止登出清除資料
                 setAccessToken(null);
                 setUserInfo(null);
                 setCloudNotes(DEFAULT_CLOUD_NOTES);
