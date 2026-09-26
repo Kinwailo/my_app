@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,1131 +9,895 @@
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f3eee4;
-      --paper: #faf6ee;
-      --sidebar: #e9e1d3;
-      --fg: #1c1914;
-      --muted: #6f675c;
-      --subtle: #9a9184;
-      --accent: #2f4a3c;
-      --accent-fg: #f3eee4;
-      --border: #d6cdbdd9;
-      --danger: #8a3b2d;
-      --ring: #2f4a3c;
-      --code: #e7dfd0;
-      --mark: #d7c7a6;
+      --bg: #f3eee4; --paper: #faf6ee; --sidebar: #e9e1d3; --fg: #1c1914;
+      --muted: #6f675c; --subtle: #9a9184; --accent: #2f4a3c; --accent-fg: #f3eee4;
+      --border: #d6cdbdd9; --danger: #8a3b2d; --ring: #2f4a3c; --code: #e7dfd0; --mark: #d7c7a6;
       --shadow: 0 0 0 1px rgb(28 25 20 / 0.06), 0 1px 2px -1px rgb(28 25 20 / 0.06), 0 2px 4px 0 rgb(28 25 20 / 0.04);
       --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
       --font-serif: "Newsreader", "Source Han Serif TC", "Songti TC", serif;
       --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      height: 100%;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: var(--font-sans);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    body {
-      overflow: hidden;
-    }
-
-    button:not(:disabled),
-    [role="button"]:not(:disabled) {
-      cursor: pointer;
-    }
-
-    ::selection {
-      background: color-mix(in oklab, var(--accent) 22%, transparent);
-    }
-
-    :focus-visible {
-      outline: 2px solid var(--ring);
-      outline-offset: 2px;
-    }
-
-    .app {
-      display: flex;
-      height: 100dvh;
-      overflow: hidden;
-      background: var(--bg);
-    }
-
-    .sidebar {
-      width: 18rem;
-      flex-shrink: 0;
-      background: var(--sidebar);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 16px 12px 12px;
-    }
-
-    .brand-text {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .brand-text h1 {
-      font-family: var(--font-serif);
-      font-size: 1.25rem;
-      font-weight: 500;
-      margin: 0;
-      letter-spacing: -0.02em;
-    }
-
-    .brand-text p {
-      margin: 4px 0 0;
-      font-size: 12px;
-      color: var(--subtle);
-    }
-
-    .icon-btn {
-      width: 44px;
-      height: 44px;
-      border: 0;
-      background: transparent;
-      color: var(--fg);
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .icon-btn:hover {
-      background: rgb(28 25 20 / 0.06);
-    }
-
-    .icon-btn:active {
-      scale: 0.96;
-    }
-
-    .icon-btn.danger:hover {
-      color: var(--danger);
-      background: rgb(138 59 45 / 0.1);
-    }
-
-    .search-wrap {
-      padding: 0 12px 12px;
-      position: relative;
-    }
-
-    .search-wrap svg {
-      position: absolute;
-      left: 24px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--subtle);
-    }
-
-    .search-wrap input {
-      width: 100%;
-      height: 44px;
-      border: 0;
-      border-radius: 8px;
-      background: color-mix(in oklab, var(--paper) 80%, transparent);
-      box-shadow: var(--shadow);
-      padding: 0 12px 0 36px;
-      font: inherit;
-      font-size: 14px;
-      color: var(--fg);
-    }
-
-    .search-wrap input::placeholder {
-      color: var(--subtle);
-    }
-
-    .search-wrap input:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ring);
-    }
-
-    .list {
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
-      padding: 0 8px 16px;
-    }
-
-    .note-item {
-      border-radius: 8px;
-      padding: 10px 12px;
-      cursor: pointer;
-      margin-bottom: 4px;
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-    }
-
-    .note-item:hover {
-      background: rgb(28 25 20 / 0.05);
-    }
-
-    .note-item.active {
-      background: var(--paper);
-      box-shadow: var(--shadow);
-    }
-
-    .note-item .meta {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .note-item h3 {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .note-item .snip {
-      margin: 2px 0 0;
-      font-size: 12px;
-      color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .note-item time {
-      display: block;
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--subtle);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .note-item .del {
-      opacity: 0;
-      width: 32px;
-      height: 32px;
-    }
-
-    .note-item:hover .del,
-    .note-item:focus-within .del {
-      opacity: 1;
-    }
-
-    mark {
-      background: var(--mark);
-      color: var(--fg);
-      border-radius: 2px;
-      padding: 0 2px;
-    }
-
-    .main {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      background: var(--paper);
-      position: relative;
-    }
-
-    .toolbar {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .toolbar-row {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      min-width: 0;
-    }
-
-    .title-input {
-      flex: 1;
-      min-width: 0;
-      border: 0;
-      background: transparent;
-      font-family: var(--font-serif);
-      font-size: 16px;
-      color: var(--fg);
-      outline: none;
-    }
-
-    .title-input::placeholder {
-      color: var(--subtle);
-    }
-
-    .view-switch {
-      display: flex;
-      background: var(--sidebar);
-      border-radius: 8px;
-      padding: 2px;
-    }
-
-    .view-switch button {
-      border: 0;
-      background: transparent;
-      height: 32px;
-      padding: 0 10px;
-      border-radius: 6px;
-      font: inherit;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .view-switch button[aria-checked="true"] {
-      background: var(--paper);
-      color: var(--fg);
-      box-shadow: var(--shadow);
-    }
-
-    .tag-input {
-      height: 32px;
-      width: 7rem;
-      border: 0;
-      border-radius: 8px;
-      background: var(--sidebar);
-      padding: 0 10px;
-      font: inherit;
-      font-size: 13px;
-      color: var(--fg);
-    }
-
-    .tag-input:disabled {
-      opacity: 0.4;
-    }
-
-    .chips {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding: 0 12px 12px;
-    }
-
-    .chip {
-      border: 0;
-      height: 28px;
-      flex: none;
-      border-radius: 999px;
-      padding: 0 10px;
-      font: inherit;
-      font-size: 12px;
-      background: var(--paper);
-      color: var(--muted);
-    }
-
-    .chip.active {
-      background: var(--accent);
-      color: var(--accent-fg);
-    }
-
-    .tagline {
-      margin: 4px 0 0;
-      font-size: 11px;
-      color: var(--accent);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .panes.stack {
-      flex-direction: column;
-    }
-
-    .panes.stack .pane+.pane {
-      border-left: 0;
-      border-top: 1px solid var(--border);
-    }
-
-    .toolbar .title {
-      flex: 1;
-      min-width: 0;
-      font-family: var(--font-serif);
-      font-size: 16px;
-      letter-spacing: -0.02em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 0 4px;
-    }
-
-    .panes {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-    }
-
-    .pane {
-      flex: 1;
-      min-width: 0;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .pane+.pane {
-      border-left: 1px solid var(--border);
-    }
-
-    textarea.editor {
-      flex: 1;
-      min-height: 0;
-      width: 100%;
-      max-width: 42rem;
-      margin: 0 auto;
-      border: 0;
-      resize: none;
-      background: transparent;
-      color: var(--fg);
-      font-family: var(--font-serif);
-      font-size: 1.125rem;
-      line-height: 1.7;
-      padding: 2.5rem 1.25rem;
-      outline: none;
-    }
-
-    textarea.editor::placeholder {
-      color: var(--subtle);
-    }
-
-    .preview {
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
-    }
-
-    .prose {
-      max-width: 42rem;
-      margin: 0 auto;
-      padding: 2.5rem 1.25rem;
-      font-family: var(--font-serif);
-      font-size: 1.125rem;
-      line-height: 1.7;
-      color: var(--fg);
-    }
-
-    .prose> :first-child {
-      margin-top: 0;
-    }
-
-    .prose h1,
-    .prose h2,
-    .prose h3 {
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      line-height: 1.25;
-    }
-
-    .prose h1 {
-      font-size: 2rem;
-      margin: 0 0 1.25rem;
-    }
-
-    .prose h2 {
-      font-size: 1.4rem;
-      margin: 2rem 0 0.75rem;
-    }
-
-    .prose h3 {
-      font-size: 1.15rem;
-      margin: 1.5rem 0 0.5rem;
-    }
-
-    .prose p {
-      margin: 0 0 1rem;
-    }
-
-    .prose a {
-      color: var(--accent);
-    }
-
-    .prose blockquote {
-      margin: 1.25rem 0;
-      padding-left: 1rem;
-      border-left: 2px solid var(--accent);
-      color: var(--muted);
-    }
-
-    .prose ul,
-    .prose ol {
-      margin: 0 0 1rem;
-      padding-left: 1.35rem;
-    }
-
-    .prose code {
-      font-family: var(--font-mono);
-      font-size: 0.86em;
-      background: var(--code);
-      border-radius: 4px;
-      padding: 0.12em 0.35em;
-    }
-
-    .prose pre {
-      background: var(--code);
-      border-radius: 12px;
-      padding: 1rem;
-      overflow-x: auto;
-      box-shadow: var(--shadow);
-    }
-
-    .prose pre code {
-      background: none;
-      padding: 0;
-      font-size: 0.82rem;
-    }
-
-    .prose hr {
-      border: 0;
-      border-top: 1px solid var(--border);
-      margin: 2rem 0;
-    }
-
-    .status {
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 0 16px;
-      border-top: 1px solid var(--border);
-      font-size: 12px;
-      color: var(--subtle);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .empty {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 24px;
-    }
-
-    .empty h2 {
-      font-family: var(--font-serif);
-      font-size: 1.5rem;
-      font-weight: 500;
-      margin: 0;
-    }
-
-    .empty p {
-      color: var(--muted);
-      font-size: 14px;
-      margin: 8px 0 0;
-    }
-
-    .primary {
-      margin-top: 24px;
-      height: 40px;
-      padding: 0 16px;
-      border: 0;
-      border-radius: 8px;
-      background: var(--accent);
-      color: var(--accent-fg);
-      font: inherit;
-      font-weight: 500;
-      font-size: 14px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 24px;
-      transform: translateX(-50%);
-      background: var(--fg);
-      color: var(--bg);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 14px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      z-index: 50;
-    }
-
-    .toast button {
-      background: none;
-      border: 0;
-      color: var(--bg);
-      font: inherit;
-      font-weight: 600;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    .dialog-bg {
-      position: fixed;
-      inset: 0;
-      background: rgb(28 25 20 / 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 60;
-    }
-
-    .dialog {
-      width: min(28rem, 100%);
-      background: var(--paper);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: var(--shadow);
-    }
-
-    .dialog h2 {
-      font-family: var(--font-serif);
-      margin: 0;
-      font-size: 1.25rem;
-    }
-
-    .dialog p {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .dialog ul {
-      list-style: none;
-      padding: 0;
-      margin: 16px 0 0;
-    }
-
-    .dialog li {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 14px;
-    }
-
-    kbd {
-      display: inline-flex;
-      min-width: 20px;
-      height: 20px;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-      border-radius: 4px;
-      background: rgb(28 25 20 / 0.08);
-      font-family: var(--font-sans);
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .sr {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-    }
-
-    .backdrop {
-      display: none;
-    }
-
+      color-scheme: light;
+    }
+    html.dark {
+      --bg: #16130f; --paper: #211c16; --sidebar: #1b1712; --fg: #f4efe6;
+      --muted: #c2b6a4; --subtle: #8f8476; --accent: #d7c4a3; --accent-fg: #1c1914;
+      --border: #3a332bd9; --danger: #e7a090; --ring: #d7c4a3; --code: #2a241c; --mark: #5a4a32;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+    body { overflow: hidden; }
+    button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+    ::selection { background: color-mix(in oklab, var(--accent) 22%, transparent); }
+    :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+    .app { display: flex; height: 100dvh; overflow: hidden; background: var(--bg); }
+    .sidebar { width: 18rem; flex-shrink: 0; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+    .brand { display: flex; align-items: center; gap: 8px; padding: 16px 12px 12px; }
+    .brand-text { flex: 1; min-width: 0; }
+    .brand-text h1 { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 500; margin: 0; letter-spacing: -0.02em; }
+    .brand-sub { margin: 4px 0 0; font-size: 12px; color: var(--subtle); display: flex; align-items: center; gap: 4px; }
+    .icon-btn, .text-btn { border: 0; background: transparent; color: var(--fg); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+    .icon-btn { width: 40px; height: 40px; }
+    .icon-btn.sm { width: 28px; height: 28px; }
+    .text-btn { height: 36px; gap: 6px; padding: 0 8px; font: inherit; font-size: 13px; }
+    .icon-btn:hover, .text-btn:hover { background: rgb(28 25 20 / 0.06); }
+    html.dark .icon-btn:hover, html.dark .text-btn:hover { background: rgb(244 239 230 / 0.08); }
+    .icon-btn:active, .text-btn:active { scale: 0.96; }
+    .icon-btn.danger:hover { color: var(--danger); }
+    .search-wrap { padding: 0 12px 12px; position: relative; }
+    .search-wrap svg { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); color: var(--subtle); }
+    .search-wrap input, .tag-input, .title-input { color: var(--fg); font: inherit; }
+    .search-wrap input { width: 100%; height: 40px; border: 0; border-radius: 8px; background: color-mix(in oklab, var(--paper) 80%, transparent); box-shadow: var(--shadow); padding: 0 12px 0 36px; font-size: 14px; }
+    .search-wrap input::placeholder, .tag-input::placeholder, .title-input::placeholder { color: var(--subtle); }
+    .search-wrap input:focus, .tag-input:focus { outline: none; box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ring); }
+    .chips { display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap; padding: 0 12px 8px; }
+    .chip { border: 0; height: 28px; flex: none; border-radius: 999px; padding: 0 10px; font: inherit; font-size: 12px; background: var(--paper); color: var(--muted); }
+    .chip.active { background: var(--accent); color: var(--accent-fg); }
+    .list { flex: 1; min-height: 0; overflow: auto; padding: 0 8px 16px; }
+    .note-item { border-radius: 8px; padding: 10px 12px; cursor: pointer; margin-bottom: 4px; }
+    .note-item:hover { background: rgb(28 25 20 / 0.05); }
+    html.dark .note-item:hover { background: rgb(244 239 230 / 0.06); }
+    .note-item.active { background: var(--paper); box-shadow: var(--shadow); }
+    .note-top { display: flex; align-items: center; gap: 2px; }
+    .note-top h3 { margin: 0; flex: 1; min-width: 0; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .snip { margin: 2px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .note-foot { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+    .pills { flex: 1; min-width: 0; display: flex; gap: 4px; }
+    .pill { max-width: 6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent); background: color-mix(in oklab, var(--accent) 12%, transparent); color: var(--accent); border-radius: 4px; padding: 1px 6px; font-size: 10px; }
+    .note-item time { font-size: 11px; color: var(--subtle); font-variant-numeric: tabular-nums; flex: none; }
+    .note-item .mini { opacity: 0; }
+    .note-item:hover .mini, .note-item:focus-within .mini { opacity: 1; }
+    mark { background: var(--mark); color: var(--fg); border-radius: 2px; padding: 0 2px; }
+    .side-foot { display: flex; align-items: center; gap: 2px; border-top: 1px solid var(--border); padding: 8px; }
+    .side-foot .grow { flex: 1; }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--paper); position: relative; }
+    .toolbar { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border); }
+    .toolbar-row { display: flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: wrap; }
+    .title-input { flex: 1; min-width: 8rem; border: 0; background: transparent; font-family: var(--font-serif); font-size: 16px; outline: none; }
+    .view-switch, .choice { display: flex; background: var(--sidebar); border-radius: 8px; padding: 2px; }
+    .view-switch button, .choice button { border: 0; background: transparent; height: 32px; min-width: 32px; padding: 0 8px; border-radius: 6px; font: inherit; font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .view-switch button[aria-checked="true"], .choice button[aria-checked="true"] { background: var(--paper); color: var(--fg); box-shadow: var(--shadow); }
+    .tag-fields { display: flex; gap: 6px; }
+    .tag-input { height: 32px; width: 6.5rem; border: 0; border-radius: 8px; background: var(--sidebar); padding: 0 10px; font-size: 13px; }
+    .tag-input:disabled { opacity: 0.4; }
+    .writing { display: none; gap: 8px; align-items: center; }
+    .panes { flex: 1; min-height: 0; display: flex; }
+    .panes.stack { flex-direction: column; }
+    .panes.stack .pane + .pane { border-left: 0; border-top: 1px solid var(--border); }
+    .pane { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+    .pane + .pane { border-left: 1px solid var(--border); }
+    textarea.editor { flex: 1; min-height: 0; width: 100%; margin: 0 auto; border: 0; resize: none; background: transparent; color: var(--fg); font-family: var(--font-serif); line-height: 1.7; padding: 2.5rem 1.25rem; outline: none; }
+    textarea.editor::placeholder { color: var(--subtle); }
+    .preview { flex: 1; min-height: 0; overflow: auto; }
+    .prose { margin: 0 auto; padding: 2.5rem 1.25rem; font-family: var(--font-serif); line-height: 1.7; color: var(--fg); }
+    .prose > :first-child { margin-top: 0; }
+    .prose h1, .prose h2, .prose h3 { font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
+    .prose h1 { font-size: 1.78em; margin: 0 0 1.25rem; }
+    .prose h2 { font-size: 1.24em; margin: 2rem 0 0.75rem; }
+    .prose h3 { font-size: 1.02em; margin: 1.5rem 0 0.5rem; }
+    .prose p { margin: 0 0 1rem; }
+    .prose a { color: var(--accent); }
+    .prose blockquote { margin: 1.25rem 0; padding-left: 1rem; border-left: 2px solid var(--accent); color: var(--muted); }
+    .prose ul, .prose ol { margin: 0 0 1rem; padding-left: 1.35rem; }
+    .prose code { font-family: var(--font-mono); font-size: 0.86em; background: var(--code); border-radius: 4px; padding: 0.12em 0.35em; }
+    .prose pre { background: var(--code); border-radius: 12px; padding: 1rem; overflow-x: auto; box-shadow: var(--shadow); }
+    .prose pre code { background: none; padding: 0; font-size: 0.82rem; }
+    .prose hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
+    .prose table { width: 100%; border-collapse: collapse; font-size: 0.95em; margin: 1.25rem 0; border: 1px solid var(--border); }
+    .prose th, .prose td { border: 1px solid var(--border); text-align: left; padding: 0.45rem 0.6rem; }
+    .prose th { font-weight: 600; background: var(--code); }
+    .status { height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--subtle); font-variant-numeric: tabular-nums; }
+    .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+    .empty h2 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 500; margin: 0; }
+    .empty p { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+    .primary { margin-top: 24px; height: 40px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-fg); font: inherit; font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--fg); color: var(--bg); border-radius: 8px; padding: 10px 14px; font-size: 14px; display: flex; gap: 12px; align-items: center; z-index: 50; }
+    .toast[hidden] { display: none; }
+    .toast button { background: none; border: 0; color: inherit; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+    .dialog-bg { position: fixed; inset: 0; background: rgb(28 25 20 / 0.3); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
+    .dialog { width: min(28rem, 100%); background: var(--paper); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+    .dialog h2 { font-family: var(--font-serif); margin: 0; font-size: 1.25rem; }
+    .dialog p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+    .dialog ul { list-style: none; padding: 0; margin: 16px 0 0; }
+    .dialog li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    kbd { display: inline-flex; min-width: 20px; height: 20px; align-items: center; justify-content: center; padding: 0 4px; border-radius: 4px; background: rgb(28 25 20 / 0.08); font-family: var(--font-sans); font-size: 11px; color: var(--muted); }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .dot-btn { width: 16px; height: 16px; border: 0; background: none; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+    .dot { width: 8px; height: 8px; border-radius: 99px; background: #2f9e62; }
+    .dot.bad { background: #d64545; }
+    .dot.pulse { animation: blink 1s infinite; }
+    @keyframes blink { 50% { opacity: 0.35; } }
+    .mark-a { font-family: var(--font-serif); line-height: 1; }
+    .mark-w { height: 12px; border: 1px solid currentColor; border-radius: 2px; display: inline-block; }
+    .backdrop { display: none; }
     @media (max-width: 767px) {
-      .sidebar {
-        position: fixed;
-        inset: 0 auto 0 0;
-        width: 100%;
-        z-index: 30;
-      }
-
-      .sidebar.closed {
-        transform: translateX(-100%);
-        opacity: 0;
-        pointer-events: none;
-      }
-
-      .backdrop {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgb(28 25 20 / 0.25);
-        z-index: 20;
-        border: 0;
-      }
-
-      .note-item .del {
-        opacity: 1;
-      }
-
-      .status .hints {
-        display: none;
-      }
+      .sidebar { position: fixed; inset: 0 auto 0 0; width: 100%; z-index: 30; }
+      .sidebar.closed { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+      .backdrop { display: block; position: fixed; inset: 0; background: rgb(28 25 20 / 0.25); z-index: 20; border: 0; }
+      .note-item .mini { opacity: 1; }
+      .status .hints { display: none; }
+      .view-switch .lbl { display: none; }
+      .tag-slot-desk { display: none; }
     }
-
     @media (min-width: 768px) {
-      .close-mobile {
-        display: none !important;
-      }
-
-      .sidebar.closed {
-        display: none;
-      }
+      .close-mobile, .tag-slot-mob { display: none !important; }
+      .sidebar.closed { display: none; }
+      .chips { flex-wrap: wrap; overflow: visible; }
+      .writing { display: flex; }
     }
   </style>
 </head>
-
 <body>
   <div class="app" id="app"></div>
+  <div class="toast" id="toast" hidden></div>
+  <input id="import-file" type="file" accept=".html,.htm,text/html" multiple hidden />
   <script>
-    const STORAGE = "mojian-notes-pages-v1";
-    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
-    const mod = isMac ? "⌘" : "Ctrl";
-    const desktop = () => window.matchMedia("(min-width: 768px)").matches;
-    const icon = {
-      plus: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>',
-      search: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>',
-      trash: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-1 0v14H9V6"/></svg>',
-      panel: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>',
-      pencil: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
-      eye: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
-      cols: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>',
-      max: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
-      min: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>',
-      keys: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>',
-      x: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
-      file: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>'
-    };
-    const WELCOME = "# 歡迎使用墨箋\n\n專注寫作的本機筆記。文字只存在這部瀏覽器，重新開啟後仍會保留。\n\n## 開始\n\n- 上方標題列可直接改名字\n- 標籤與子標籤用來分類\n- `" + mod + " N` — 新增筆記\n- `" + mod + " K` 或 `/` — 即時搜尋\n- `" + mod + " E` — 循環編輯 / 並排 / 預覽\n- `" + mod + " B` — 顯示或隱藏側邊欄\n- `" + mod + " ⌫` — 刪除目前筆記（可復原）\n- `?` — 快捷鍵一覽\n\n沒改過標題時，名字會取自第一行。\n\n## Markdown\n\n**粗體**、*斜體*、`行內程式碼`\n\n> 把想法寫下來，其餘的事之後再說。\n\n- 短句\n- 清單\n\n1. 呼吸\n2. 書寫\n";
-    const SAMPLE = "# 晨間隨筆\n\n窗外還未全亮。桌上只留一盞燈，紙面偏暖。\n\n先寫三行，不論好壞。手熱了，句子自己會來。\n\n- 水\n- 窗\n- 未完成的段落\n";
+const STORAGE = "mojian-notes-pages-v1";
+const PREFS = "mojian-pages-prefs";
+const TOKEN_KEY = "mojian-drive-tokens";
+const CLIENT_ID = "474647430222-b78vgcdj17obddv4mo8u013q6k4psv20.apps.googleusercontent.com";
+const TOKEN_ENDPOINT = "https://token.kinwailo.workers.dev/";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+const NOTE_PREFIX = "mojian-note-";
+const LEGACY_NAME = "mojian-notes.json";
+const SYNC_DELAY = 60000;
+const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+const mod = isMac ? "⌘" : "Ctrl";
+const desktop = () => window.matchMedia("(min-width: 768px)").matches;
+const FONT = { sm: "1rem", md: "1.125rem", lg: "1.25rem", xl: "1.5rem" };
+const WIDTH = { narrow: "32rem", default: "42rem", wide: "56rem", full: "none" };
+const ZH = {
+  local: "本機筆記", cloud: "雲端筆記", search: "搜尋筆記", newNote: "新增筆記", importHtml: "匯入 HTML",
+  close: "關閉列表", all: "全部", untagged: "未分類", empty: "還沒有筆記", none: "沒有符合的筆記",
+  blank: "空白筆記", edit: "編輯", split: "並排", preview: "預覽", tag: "標籤", subtag: "子標籤",
+  untitled: "未命名筆記", focus: "專注模式", leaveFocus: "離開專注模式", help: "快捷鍵",
+  helpTitle: "鍵盤快捷鍵", helpHint: "在編輯時同樣可用。按 Esc 關閉。",
+  words: "字", edited: "最後編輯", login: "登入", logout: "登出",
+  deleted: "已刪除筆記", undo: "復原", start: "開始寫作…", emptyTitle: "紙上的空白，正等你寫下第一句。",
+  emptyBody: "建立一則筆記，內容會保存在這部瀏覽器。", previewEmpty: "尚未寫下任何內容。",
+  synced: "已同步", unsynced: "未同步，點擊立即同步", syncing: "同步中",
+  font: "字形", width: "頁闊", fontSm: "小", fontMd: "預設", fontLg: "大", fontXl: "特大",
+  widthNarrow: "窄", widthDefault: "預設", widthWide: "寬", widthFull: "滿"
+};
+const EN = {
+  local: "Local notes", cloud: "Cloud notes", search: "Search notes", newNote: "New note", importHtml: "Import HTML",
+  close: "Close list", all: "All", untagged: "Untagged", empty: "No notes yet", none: "No matching notes",
+  blank: "Empty note", edit: "Edit", split: "Split", preview: "Preview", tag: "Tag", subtag: "Subtag",
+  untitled: "Untitled", focus: "Focus mode", leaveFocus: "Leave focus mode", help: "Shortcuts",
+  helpTitle: "Keyboard shortcuts", helpHint: "These also work while editing. Press Esc to close.",
+  words: "words", edited: "Edited", login: "Sign in", logout: "Sign out",
+  deleted: "Note deleted", undo: "Undo", start: "Start writing…", emptyTitle: "The page is blank. Write the first line.",
+  emptyBody: "Create a note. It stays in this browser.", previewEmpty: "Nothing written yet.",
+  synced: "Synced", unsynced: "Not synced. Click to sync now", syncing: "Syncing",
+  font: "Type", width: "Width", fontSm: "S", fontMd: "Default", fontLg: "L", fontXl: "XL",
+  widthNarrow: "Narrow", widthDefault: "Default", widthWide: "Wide", widthFull: "Full"
+};
+function t(key) { return (state.locale === "en" ? EN : ZH)[key]; }
+const icon = {
+  plus: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>',
+  search: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>',
+  panel: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>',
+  pencil: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  eye: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  cols: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>',
+  max: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
+  min: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>',
+  keys: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>',
+  x: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  down: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14"/></svg>',
+  up: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 16V4m0 0 5 5M12 4 7 9"/><path d="M5 20h14"/></svg>',
+  in: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h4v4M10 14 19 5M14 3H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4v-7"/></svg>',
+  out: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
+  sun: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  moon: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/></svg>'
+};
 
-    function titleFrom(content) {
-      const line = (content.split("\n").find((r) => r.trim()) || "");
-      const stripped = line.replace(/^#{1,6}\s+/, "").replace(/^\s*[-*+]\s+/, "").replace(/^\s*\d+\.\s+/, "").replace(/[*_`~]/g, "").trim();
-      return stripped.slice(0, 80) || "未命名筆記";
+function titleFrom(content) {
+  const line = content.split("\n").find((row) => row.trim()) || "";
+  return line.replace(/^#{1,6}\s+/, "").replace(/^\s*[-*+]\s+/, "").replace(/^\s*\d+\.\s+/, "").replace(/[*_`~]/g, "").trim().slice(0, 80) || t("untitled");
+}
+function snippetFrom(content) {
+  return content.split("\n").map((row) => row.trim()).filter(Boolean).slice(1).join(" ").replace(/[#>*`_[\]()]/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+}
+function countWords(text) {
+  const cjk = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+  const latin = (text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, " ").match(/[A-Za-z0-9]+/g) || []).length;
+  return cjk + latin;
+}
+function relTime(ts) {
+  const seconds = Math.max(1, Math.round((Date.now() - ts) / 1000));
+  const en = state.locale === "en";
+  if (seconds < 60) return en ? "just now" : "少於 1 分鐘前";
+  if (seconds < 3600) return Math.round(seconds / 60) + (en ? "m ago" : " 分鐘前");
+  if (seconds < 86400) return Math.round(seconds / 3600) + (en ? "h ago" : " 小時前");
+  if (seconds < 604800) return Math.round(seconds / 86400) + (en ? "d ago" : " 天前");
+  const date = new Date(ts);
+  return en ? date.toLocaleDateString("en") : date.getFullYear() + "年" + (date.getMonth() + 1) + "月" + date.getDate() + "日";
+}
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, (ch) => "&#" + ch.charCodeAt(0) + ";");
+}
+function inlineMd(value) {
+  return value
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+function splitCells(line) {
+  let text = line.trim();
+  if (text.startsWith("|")) text = text.slice(1);
+  if (text.endsWith("|")) text = text.slice(0, -1);
+  return text.split("|").map((cell) => cell.trim());
+}
+function renderMd(src) {
+  if (!src.trim()) return "<p><em>" + esc(t("previewEmpty")) + "</em></p>";
+  const parts = esc(src).replace(/\r\n/g, "\n").split(/```([\s\S]*?)```/);
+  let html = "";
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2) {
+      const nl = parts[i].indexOf("\n");
+      html += "<pre><code>" + (nl >= 0 ? parts[i].slice(nl + 1) : parts[i]).replace(/\s+$/, "") + "</code></pre>";
+      continue;
     }
-    function snippetFrom(content) {
-      return content.split("\n").map((r) => r.trim()).filter(Boolean).slice(1).join(" ").replace(/[#>*`_[\]()]/g, " ").replace(/\s+/g, " ").trim().slice(0, 90);
+    for (const block of parts[i].split(/\n\n+/)) {
+      if (!block.trim()) continue;
+      const lines = block.split("\n");
+      if (/^###\s/.test(block)) html += "<h3>" + inlineMd(block.replace(/^###\s+/, "")) + "</h3>";
+      else if (/^##\s/.test(block)) html += "<h2>" + inlineMd(block.replace(/^##\s+/, "")) + "</h2>";
+      else if (/^#\s/.test(block)) html += "<h1>" + inlineMd(block.replace(/^#\s+/, "")) + "</h1>";
+      else if (/^>\s/.test(block)) html += "<blockquote>" + inlineMd(lines.map((line) => line.replace(/^>\s?/, "")).join(" ")) + "</blockquote>";
+      else if (/^---+$/.test(block.trim())) html += "<hr />";
+      else if (lines.length >= 2 && lines[0].includes("|") && /^\s*\|?\s*:?-{3,}/.test(lines[1])) {
+        const head = splitCells(lines[0]);
+        const body = lines.slice(2).map(splitCells);
+        html += "<table><thead><tr>" + head.map((cell) => "<th>" + inlineMd(cell) + "</th>").join("") + "</tr></thead><tbody>" +
+          body.map((row) => "<tr>" + head.map((_, index) => "<td>" + inlineMd(row[index] || "") + "</td>").join("") + "</tr>").join("") +
+          "</tbody></table>";
+      } else if (lines.every((line) => /^[-*]\s/.test(line))) html += "<ul>" + lines.map((line) => "<li>" + inlineMd(line.replace(/^[-*]\s+/, "")) + "</li>").join("") + "</ul>";
+      else if (lines.every((line) => /^\d+\.\s/.test(line))) html += "<ol>" + lines.map((line) => "<li>" + inlineMd(line.replace(/^\d+\.\s+/, "")) + "</li>").join("") + "</ol>";
+      else html += "<p>" + inlineMd(lines.join("<br />")) + "</p>";
     }
-    function countWords(text) {
-      const cjk = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
-      const latin = (text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, " ").match(/[A-Za-z0-9]+/g) || []).length;
-      return cjk + latin;
-    }
-    function relTime(ts) {
-      const s = Math.max(1, Math.round((Date.now() - ts) / 1000));
-      if (s < 60) return "少於 1 分鐘前";
-      if (s < 3600) return Math.round(s / 60) + " 分鐘前";
-      if (s < 86400) return Math.round(s / 3600) + " 小時前";
-      if (s < 604800) return Math.round(s / 86400) + " 天前";
-      const d = new Date(ts);
-      return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
-    }
-    function esc(s) {
-      return String(s).replace(/[&<>"]/g, function (c) {
-        return "&#" + c.charCodeAt(0) + ";";
-      });
-    }
-    function inline(s) {
-      return s
-        .replace(/`([^`]+)`/g, "<code>$1</code>")
-        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-        .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-    }
-    function renderMd(src) {
-      if (!src.trim()) return "<p><em>尚未寫下任何內容。</em></p>";
-      const escaped = esc(src).replace(/\r\n/g, "\n");
-      const parts = escaped.split(/```([\s\S]*?)```/);
-      let html = "";
-      for (let i = 0; i < parts.length; i++) {
-        if (i % 2) {
-          const nl = parts[i].indexOf("\n");
-          const code = (nl >= 0 ? parts[i].slice(nl + 1) : parts[i]).replace(/\s+$/, "");
-          html += "<pre><code>" + code + "</code></pre>";
-          continue;
-        }
-        const blocks = parts[i].split(/\n\n+/);
-        for (const block of blocks) {
-          if (!block.trim()) continue;
-          const lines = block.split("\n");
-          if (/^###\s/.test(block)) html += "<h3>" + inline(block.replace(/^###\s+/, "")) + "</h3>";
-          else if (/^##\s/.test(block)) html += "<h2>" + inline(block.replace(/^##\s+/, "")) + "</h2>";
-          else if (/^#\s/.test(block)) html += "<h1>" + inline(block.replace(/^#\s+/, "")) + "</h1>";
-          else if (/^>\s/.test(block)) html += "<blockquote>" + inline(lines.map((l) => l.replace(/^>\s?/, "")).join(" ")) + "</blockquote>";
-          else if (/^---+$/.test(block.trim())) html += "<hr />";
-          else if (lines.every((l) => /^[-*]\s/.test(l))) html += "<ul>" + lines.map((l) => "<li>" + inline(l.replace(/^[-*]\s+/, "")) + "</li>").join("") + "</ul>";
-          else if (lines.every((l) => /^\d+\.\s/.test(l))) html += "<ol>" + lines.map((l) => "<li>" + inline(l.replace(/^\d+\.\s+/, "")) + "</li>").join("") + "</ol>";
-          else html += "<p>" + inline(lines.join("<br />")) + "</p>";
-        }
-      }
-      return html;
-    }
-    function highlight(text, q) {
-      const query = q.trim();
-      if (!query) return esc(text);
-      const i = text.toLowerCase().indexOf(query.toLowerCase());
-      if (i < 0) return esc(text);
-      return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
-    }
-    function uid() {
-      return (crypto.randomUUID && crypto.randomUUID()) || ("n" + Date.now() + Math.random().toString(16).slice(2));
-    }
+  }
+  return html;
+}
+function highlight(text, query) {
+  const q = query.trim();
+  if (!q) return esc(text);
+  const index = text.toLowerCase().indexOf(q.toLowerCase());
+  if (index < 0) return esc(text);
+  return esc(text.slice(0, index)) + "<mark>" + esc(text.slice(index, index + q.length)) + "</mark>" + esc(text.slice(index + q.length));
+}
+function uid() { return (crypto.randomUUID && crypto.randomUUID()) || ("n" + Date.now() + Math.random().toString(16).slice(2)); }
 
-    const now = Date.now();
-    const seed = [
-      { id: "welcome", title: titleFrom(WELCOME), content: WELCOME, createdAt: now - 42 * 60000, updatedAt: now - 12 * 60000, tag: "說明", subtag: "入門", titleCustom: false },
-      { id: "morning", title: titleFrom(SAMPLE), content: SAMPLE, createdAt: now - 26 * 3600000, updatedAt: now - 5 * 3600000, tag: "隨筆", subtag: "晨間", titleCustom: false }
-    ];
-    function load() {
-      try {
-        const data = JSON.parse(localStorage.getItem(STORAGE) || "null");
-        if (!data || !Array.isArray(data.notes)) return null;
-        return data;
-      } catch (e) { return null; }
-    }
-    function save() {
-      localStorage.setItem(STORAGE, JSON.stringify({ notes: state.notes, activeId: state.activeId, view: state.view }));
-    }
-    function normalize(note) {
-      note.tag = typeof note.tag === "string" ? note.tag : "";
-      note.subtag = typeof note.subtag === "string" ? note.subtag : "";
-      note.titleCustom = !!note.titleCustom;
-      return note;
-    }
-    const saved = load();
-    const state = {
-      notes: (saved && saved.notes.length ? saved.notes : seed).map(normalize),
-      activeId: (saved && saved.activeId) || "welcome",
-      search: "",
-      tagFilter: "",
-      subtagFilter: "",
-      view: (saved && saved.view) || "split",
-      sidebarOpen: true,
-      focusMode: false,
-      lastDeleted: null,
-      shortcuts: false
-    };
-    function active() { return state.notes.find((n) => n.id === state.activeId) || null; }
-    function filtered() {
-      const q = state.search.trim().toLowerCase();
-      return state.notes.slice().sort((a, b) => b.updatedAt - a.updatedAt).filter((n) => {
-        if (state.tagFilter === "未分類") { if (n.tag.trim()) return false; }
-        else if (state.tagFilter && n.tag.trim() !== state.tagFilter) return false;
-        if (state.subtagFilter && n.subtag.trim() !== state.subtagFilter) return false;
-        if (!q) return true;
-        return n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q) || n.tag.toLowerCase().includes(q) || n.subtag.toLowerCase().includes(q);
+const WELCOME = "# 歡迎使用墨箋\n\n專注寫作的本機筆記。文字只存在這部瀏覽器，重新開啟後仍會保留。\n\n## 開始\n\n- 上方標題列可直接改名字\n- 標籤與子標籤用來分類\n- `" + mod + " N` — 新增筆記\n- `" + mod + " K` 或 `/` — 即時搜尋\n- `" + mod + " E` — 循環編輯 / 並排 / 預覽\n- `" + mod + " B` — 顯示或隱藏側邊欄\n- `" + mod + " ⌫` — 刪除目前筆記（可復原）\n- `?` — 快捷鍵一覽\n";
+const SAMPLE = "# 晨間隨筆\n\n窗外還未全亮。桌上只留一盞燈，紙面偏暖。\n\n先寫三行，不論好壞。\n\n- 水\n- 窗\n- 未完成的段落\n";
+const seedNow = Date.now();
+const seed = [
+  { id: "welcome", title: "歡迎使用墨箋", content: WELCOME, createdAt: seedNow - 42 * 60000, updatedAt: seedNow - 12 * 60000, tag: "說明", subtag: "入門", titleCustom: false },
+  { id: "morning", title: "晨間隨筆", content: SAMPLE, createdAt: seedNow - 26 * 3600000, updatedAt: seedNow - 5 * 3600000, tag: "隨筆", subtag: "晨間", titleCustom: false }
+];
+function loadNotes() {
+  try { return JSON.parse(localStorage.getItem(STORAGE) || "null"); } catch (e) { return null; }
+}
+function loadPrefs() {
+  try { return JSON.parse(localStorage.getItem(PREFS) || "null") || {}; } catch (e) { return {}; }
+}
+const saved = loadNotes();
+const prefs = loadPrefs();
+const state = {
+  notes: (saved && Array.isArray(saved.notes) && saved.notes.length ? saved.notes : seed).map(normalize),
+  tombstones: saved && Array.isArray(saved.tombstones) ? saved.tombstones : [],
+  activeId: (saved && saved.activeId) || "welcome",
+  search: "", tagFilter: "", subtagFilter: "",
+  view: (saved && saved.view) || "split",
+  sidebarOpen: true, focusMode: false, shortcuts: false,
+  lastDeleted: null, applying: false,
+  locale: prefs.locale === "en" ? "en" : "zh",
+  theme: prefs.theme === "dark" ? "dark" : "light",
+  font: FONT[prefs.font] ? prefs.font : "md",
+  width: WIDTH[prefs.width] ? prefs.width : "default",
+  syncing: false, syncError: ""
+};
+let dirtyRev = new Map();
+let dirtyClock = 0;
+let syncTimer = 0;
+let syncing = false;
+let syncQueued = false;
+function normalize(note) {
+  note.tag = typeof note.tag === "string" ? note.tag : "";
+  note.subtag = typeof note.subtag === "string" ? note.subtag : "";
+  note.titleCustom = !!note.titleCustom;
+  return note;
+}
+function save() {
+  localStorage.setItem(STORAGE, JSON.stringify({ notes: state.notes, activeId: state.activeId, view: state.view, tombstones: state.tombstones }));
+}
+function savePrefs() {
+  localStorage.setItem(PREFS, JSON.stringify({ locale: state.locale, theme: state.theme, font: state.font, width: state.width }));
+  document.documentElement.classList.toggle("dark", state.theme === "dark");
+  document.documentElement.lang = state.locale === "en" ? "en" : "zh-Hant";
+  document.documentElement.style.colorScheme = state.theme;
+}
+function active() { return state.notes.find((note) => note.id === state.activeId) || null; }
+function filtered() {
+  const q = state.search.trim().toLowerCase();
+  return state.notes.slice().sort((a, b) => b.updatedAt - a.updatedAt).filter((note) => {
+    if (state.tagFilter === "未分類") {
+      if (note.tag.trim()) return false;
+    } else if (state.tagFilter && note.tag.trim() !== state.tagFilter) return false;
+    if (state.subtagFilter && note.subtag.trim() !== state.subtagFilter) return false;
+    if (!q) return true;
+    return (note.title + "\n" + note.content + "\n" + note.tag + "\n" + note.subtag).toLowerCase().includes(q);
+  });
+}
+function displayTitle(note) { return note.title.trim() || t("untitled"); }
+function markDirty(id) {
+  if (!hasSession() || state.applying) return;
+  dirtyRev.set(id, ++dirtyClock);
+  paintSync();
+  if (syncTimer) return;
+  syncTimer = setTimeout(() => { syncTimer = 0; syncNow(); }, SYNC_DELAY);
+}
+function createNote() {
+  const note = { id: uid(), title: t("untitled"), content: "", createdAt: Date.now(), updatedAt: Date.now(), tag: "", subtag: "", titleCustom: false };
+  state.notes = [note].concat(state.notes);
+  state.activeId = note.id;
+  state.search = "";
+  state.focusMode = false;
+  if (!desktop()) state.sidebarOpen = false;
+  markDirty(note.id);
+  save();
+  render({ focusEditor: true });
+}
+function deleteNote(id) {
+  const target = state.notes.find((note) => note.id === id);
+  if (!target) return;
+  state.lastDeleted = target;
+  state.notes = state.notes.filter((note) => note.id !== id);
+  state.tombstones = state.tombstones.filter((item) => item.id !== id).concat([{ id, at: Date.now() }]).slice(-500);
+  if (state.activeId === id) state.activeId = state.notes[0] ? state.notes[0].id : null;
+  markDirty(id);
+  save();
+  showToast(t("deleted"), true);
+  render();
+}
+function undo() {
+  if (!state.lastDeleted) return;
+  const restored = Object.assign({}, state.lastDeleted, { updatedAt: Date.now() });
+  if (!state.notes.some((note) => note.id === restored.id)) state.notes = [restored].concat(state.notes);
+  state.activeId = restored.id;
+  state.tombstones = state.tombstones.filter((item) => item.id !== restored.id);
+  state.lastDeleted = null;
+  markDirty(restored.id);
+  save();
+  hideToast();
+  render();
+}
+function setView(view) { state.view = view; state.focusMode = false; save(); render(); }
+function cycleView() { setView(["write", "split", "preview"][(["write", "split", "preview"].indexOf(state.view) + 1) % 3]); }
+function downloadNote(note) {
+  const name = (displayTitle(note) || "note").replace(/[\\/:*?"<>|]/g, " ").trim() || "note";
+  const url = URL.createObjectURL(new Blob([note.content], { type: "text/markdown;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url; link.download = name + ".md"; link.click();
+  URL.revokeObjectURL(url);
+}
+function htmlToNote(html, filename) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const skip = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, SVG: 1, IFRAME: 1 };
+  function inline(node) {
+    if (node.nodeType === 3) return (node.textContent || "").replace(/\s+/g, " ");
+    if (node.nodeType !== 1 || skip[node.tagName]) return "";
+    const tag = node.tagName;
+    if (tag === "BR") return "\n";
+    if (tag === "IMG") { const src = node.getAttribute("src") || ""; return src ? "![" + (node.getAttribute("alt") || "") + "](" + src + ")" : ""; }
+    const inner = Array.from(node.childNodes).map(inline).join("");
+    if (tag === "STRONG" || tag === "B") return inner.trim() ? "**" + inner.trim() + "**" : "";
+    if (tag === "EM" || tag === "I") return inner.trim() ? "*" + inner.trim() + "*" : "";
+    if (tag === "CODE") return inner ? "`" + inner.replace(/\n/g, " ") + "`" : "";
+    if (tag === "A") { const href = node.getAttribute("href") || ""; const label = inner.trim() || href; return href ? "[" + label + "](" + href + ")" : label; }
+    return inner;
+  }
+  function textOf(el) { return Array.from(el.childNodes).map(inline).join("").replace(/\s+/g, " ").trim(); }
+  function table(el) {
+    const rows = Array.from(el.querySelectorAll("tr"));
+    if (!rows.length) return "";
+    const cells = (row) => Array.from(row.children).filter((cell) => cell.tagName === "TH" || cell.tagName === "TD").map((cell) => textOf(cell).replace(/\|/g, "\\|"));
+    const head = cells(rows[0]);
+    if (!head.length) return "";
+    return ["| " + head.join(" | ") + " |", "| " + head.map(() => "---").join(" | ") + " |"].concat(rows.slice(1).map((row) => {
+      const values = cells(row);
+      while (values.length < head.length) values.push("");
+      return "| " + values.slice(0, head.length).join(" | ") + " |";
+    })).join("\n");
+  }
+  function list(el, ordered, depth) {
+    return Array.from(el.children).filter((child) => child.tagName === "LI").map((item, index) => {
+      const pad = "  ".repeat(depth);
+      const bits = [];
+      let buf = [];
+      const flush = () => { const text = buf.map(inline).join("").replace(/\s+/g, " ").trim(); buf = []; if (text) bits.push(text); };
+      Array.from(item.childNodes).forEach((child) => {
+        if (child.tagName === "UL" || child.tagName === "OL") { flush(); bits.push(list(child, child.tagName === "OL", depth + 1)); }
+        else buf.push(child);
       });
-    }
-    function resolvedView() { return state.view; }
-    function createNote() {
-      const note = { id: uid(), title: "未命名筆記", content: "", createdAt: Date.now(), updatedAt: Date.now(), tag: "", subtag: "", titleCustom: false };
-      state.notes = [note].concat(state.notes);
-      state.activeId = note.id;
-      state.search = "";
-      state.focusMode = false;
-      if (!desktop()) state.sidebarOpen = false;
-      save();
-      render({ focusEditor: true });
-    }
-    function deleteNote(id) {
-      const target = state.notes.find((n) => n.id === id);
-      if (!target) return;
-      state.lastDeleted = target;
-      state.notes = state.notes.filter((n) => n.id !== id);
-      if (state.activeId === id) state.activeId = state.notes[0] ? state.notes[0].id : null;
-      save();
-      render();
-    }
-    function undo() {
-      if (!state.lastDeleted) return;
-      if (!state.notes.some((n) => n.id === state.lastDeleted.id)) state.notes = [state.lastDeleted].concat(state.notes);
-      state.activeId = state.lastDeleted.id;
-      state.lastDeleted = null;
-      save();
-      render();
-    }
-    function cycleView() {
-      const order = ["write", "split", "preview"];
-      state.view = order[(order.indexOf(state.view) + 1) % 3];
-      state.focusMode = false;
-      save();
-      render();
-    }
-    function setView(view) {
-      state.view = view;
-      state.focusMode = false;
-      save();
-      render();
-    }
-
-    function render(opts) {
-      opts = opts || {};
-      const root = document.getElementById("app");
-      const note = active();
-      const list = filtered();
-      const view = resolvedView();
-      const showSidebar = !state.focusMode && state.sidebarOpen;
-      const stacked = !desktop() && view === "split";
-      const listHtml = list.length === 0
-        ? '<div class="empty">' + icon.file + "<p>" + (state.notes.length === 0 ? "還沒有筆記" : "沒有符合的筆記") + "</p></div>"
-        : list.map(function (n) {
-          const label = n.title.trim() || "未命名筆記";
-          const tags = (n.tag.trim() || n.subtag.trim()) ? '<p class="tagline">' + esc(n.tag.trim() || "未分類") + (n.subtag.trim() ? " / " + esc(n.subtag.trim()) : "") + "</p>" : "";
-          return '<div class="note-item ' + (n.id === state.activeId ? "active" : "") + '" role="option" data-open="' + n.id + '"><div class="meta"><h3>' + highlight(label, state.search) + "</h3>" + tags + '<p class="snip">' + (snippetFrom(n.content) ? highlight(snippetFrom(n.content), state.search) : "空白筆記") + "</p><time>" + relTime(n.updatedAt) + '</time></div><button class="icon-btn del danger" data-del="' + n.id + '" aria-label="刪除">' + icon.trash + "</button></div>";
-        }).join("");
-      const panes = !note ? "" : (
-        '<div class="panes' + (stacked ? " stack" : "") + '">' +
-        (view !== "preview" ? '<div class="pane"><label class="sr" for="editor">筆記內容</label><textarea id="editor" class="editor" placeholder="開始寫作…">' + esc(note.content) + "</textarea></div>" : "") +
-        (view !== "write" ? '<div class="pane preview"><article class="prose">' + renderMd(note.content) + "</article></div>" : "") +
-        "</div>" +
-        (state.focusMode ? "" : '<footer class="status"><span>' + countWords(note.content) + " 字　/　最後編輯 " + relTime(note.updatedAt) + '</span><span class="hints">' + mod + " N 新增　" + mod + " E 預覽　? 快捷鍵</span></footer>")
-      );
-      const empty = '<div class="empty"><h2>紙上的空白，正等你寫下第一句。</h2><p>建立一則筆記，內容會保存在這部瀏覽器。</p><button class="primary" data-act="new">' + icon.plus + " 新增筆記</button></div>";
-      const viewButtons = ["write", "split", "preview"].map(function (id) {
-        const label = id === "write" ? "編輯" : id === "split" ? "並排" : "預覽";
-        return '<button type="button" role="radio" data-view="' + id + '" aria-checked="' + (view === id) + '">' + label + "</button>";
-      }).join("");
-      const toolbar = state.focusMode
-        ? '<div style="position:absolute;top:12px;right:12px;z-index:10"><button class="icon-btn" data-act="focus" aria-label="離開專注模式">' + icon.min + "</button></div>"
-        : '<header class="toolbar"><div class="toolbar-row"><button class="icon-btn" data-act="sidebar" aria-label="側邊欄">' + icon.panel + '</button><input id="title-input" class="title-input" aria-label="筆記名稱" maxlength="80" placeholder="未命名筆記" value="' + esc(note ? note.title : "") + '" ' + (note ? "" : "disabled") + ' /><button class="icon-btn" data-act="new" aria-label="新增筆記">' + icon.plus + '</button><button class="icon-btn" data-act="focus" aria-label="專注模式">' + icon.max + '</button><button class="icon-btn" data-act="help" aria-label="快捷鍵">' + icon.keys + '</button></div>' +
-        (note ? '<div class="toolbar-row"><div class="view-switch" role="radiogroup" aria-label="檢視">' + viewButtons + '</div><input id="tag-input" class="tag-input" aria-label="標籤" maxlength="24" placeholder="標籤" value="' + esc(note.tag) + '" /><input id="subtag-input" class="tag-input" aria-label="子標籤" maxlength="24" placeholder="子標籤" value="' + esc(note.subtag) + '"' + (note.tag.trim() ? "" : " disabled") + " /></div>" : "") +
-        "</header>";
-      const help = !state.shortcuts ? "" : (
-        '<div class="dialog-bg" data-act="help"><div class="dialog" data-stop="1"><h2>鍵盤快捷鍵</h2><p>在編輯時同樣可用。按 Esc 關閉。</p><ul>' +
-        [["新增筆記", "N"], ["搜尋筆記", "K"], ["循環編輯 / 並排 / 預覽", "E"], ["顯示或隱藏側邊欄", "B"], ["專注模式", "\\"], ["刪除目前筆記", "⌫"]].map(function (row) {
-          return "<li><span>" + row[0] + "</span><span><kbd>" + mod + "</kbd> <kbd>" + row[1] + "</kbd></span></li>";
-        }).join("") +
-        "<li><span>開啟此說明</span><span><kbd>?</kbd></span></li></ul></div></div>"
-      );
-      const tags = [];
-      state.notes.forEach(function (n) { if (n.tag.trim() && tags.indexOf(n.tag.trim()) < 0) tags.push(n.tag.trim()); });
-      tags.sort(function (a, b) { return a.localeCompare(b, "zh-Hant"); });
-      const hasUntagged = state.notes.some(function (n) { return !n.tag.trim(); });
-      const subtags = [];
-      if (state.tagFilter && state.tagFilter !== "未分類") {
-        state.notes.forEach(function (n) {
-          if (n.tag.trim() === state.tagFilter && n.subtag.trim() && subtags.indexOf(n.subtag.trim()) < 0) subtags.push(n.subtag.trim());
-        });
-      }
-      const chips = (tags.length || hasUntagged)
-        ? '<div class="chips"><button class="chip' + (state.tagFilter ? "" : " active") + '" data-tag="">全部</button>' +
-        tags.map(function (tag) { return '<button class="chip' + (state.tagFilter === tag ? " active" : "") + '" data-tag="' + esc(tag) + '">' + esc(tag) + "</button>"; }).join("") +
-        (hasUntagged ? '<button class="chip' + (state.tagFilter === "未分類" ? " active" : "") + '" data-tag="未分類">未分類</button>' : "") +
-        "</div>" +
-        (subtags.length ? '<div class="chips">' + subtags.map(function (sub) { return '<button class="chip' + (state.subtagFilter === sub ? " active" : "") + '" data-sub="' + esc(sub) + '">' + esc(sub) + "</button>"; }).join("") + "</div>" : "")
-        : "";
-      root.innerHTML =
-        (showSidebar && !desktop() ? '<button class="backdrop" data-act="close-sidebar" aria-label="關閉側邊欄"></button>' : "") +
-        '<aside class="sidebar ' + (showSidebar ? "" : "closed") + '"><div class="brand"><div class="brand-text"><h1>墨箋</h1><p>本機筆記</p></div><button class="icon-btn close-mobile" data-act="close-sidebar" aria-label="關閉列表">' + icon.x + '</button><button class="icon-btn" data-act="new" aria-label="新增筆記">' + icon.plus + '</button></div><div class="search-wrap">' + icon.search + '<input id="search" type="search" placeholder="搜尋筆記" aria-label="搜尋筆記" value="' + esc(state.search) + '" /></div>' + chips + '<div class="list" role="listbox" aria-label="筆記列表">' + listHtml + "</div></aside>" +
-        '<main class="main">' + toolbar + (note ? panes : empty) + "</main>" +
-        help +
-        (state.lastDeleted ? '<div class="toast">已刪除筆記 <button data-act="undo">復原</button></div>' : "");
-      bind();
-      const editor = document.getElementById("editor");
-      if (opts.focusEditor && editor) {
-        editor.focus();
-        editor.selectionStart = editor.selectionEnd = editor.value.length;
-      }
-    }
-    function bind() {
-      document.querySelectorAll("[data-act]").forEach(function (el) {
-        el.addEventListener("click", function (e) {
-          if (el.getAttribute("data-stop")) return;
-          const act = el.getAttribute("data-act");
-          if (act === "new") createNote();
-          if (act === "sidebar") { state.sidebarOpen = !state.sidebarOpen; state.focusMode = false; render(); }
-          if (act === "close-sidebar") { state.sidebarOpen = false; render(); }
-          if (act === "focus") { state.focusMode = !state.focusMode; state.sidebarOpen = !state.focusMode; render(); }
-          if (act === "help") { state.shortcuts = !state.shortcuts; render(); }
-          if (act === "undo") undo();
-          e.stopPropagation();
-        });
-      });
-      document.querySelectorAll("[data-stop]").forEach(function (el) {
-        el.addEventListener("click", function (e) { e.stopPropagation(); });
-      });
-      document.querySelectorAll("[data-open]").forEach(function (el) {
-        el.addEventListener("click", function () {
-          state.activeId = el.getAttribute("data-open");
-          if (!desktop()) state.sidebarOpen = false;
-          save();
-          render();
-        });
-      });
-      document.querySelectorAll("[data-del]").forEach(function (el) {
-        el.addEventListener("click", function (e) {
-          e.stopPropagation();
-          deleteNote(el.getAttribute("data-del"));
-        });
-      });
-      document.querySelectorAll("[data-view]").forEach(function (el) {
-        el.addEventListener("click", function (e) {
-          e.stopPropagation();
-          setView(el.getAttribute("data-view"));
-        });
-      });
-      document.querySelectorAll("[data-tag]").forEach(function (el) {
-        el.addEventListener("click", function (e) {
-          e.stopPropagation();
-          const tag = el.getAttribute("data-tag") || "";
-          state.tagFilter = state.tagFilter === tag ? "" : tag;
-          state.subtagFilter = "";
-          render();
-        });
-      });
-      document.querySelectorAll("[data-sub]").forEach(function (el) {
-        el.addEventListener("click", function (e) {
-          e.stopPropagation();
-          const sub = el.getAttribute("data-sub") || "";
-          state.subtagFilter = state.subtagFilter === sub ? "" : sub;
-          render();
-        });
-      });
-      const titleInput = document.getElementById("title-input");
-      if (titleInput && active()) {
-        titleInput.addEventListener("input", function () {
-          const note = active();
-          if (!note) return;
-          note.title = titleInput.value.slice(0, 80);
-          note.titleCustom = true;
-          note.updatedAt = Date.now();
-          save();
-          const h3 = document.querySelector(".note-item.active h3");
-          if (h3) h3.textContent = note.title.trim() || "未命名筆記";
-        });
-        titleInput.addEventListener("blur", function () {
-          const note = active();
-          if (!note || !note.titleCustom) return;
-          const trimmed = note.title.trim().slice(0, 80);
-          if (!trimmed) {
-            note.title = titleFrom(note.content);
-            note.titleCustom = false;
-          } else note.title = trimmed;
-          save();
-          render();
-        });
-      }
-      const tagInput = document.getElementById("tag-input");
-      const subtagInput = document.getElementById("subtag-input");
-      if (tagInput && active()) {
-        tagInput.addEventListener("input", function () {
-          const note = active();
-          if (!note) return;
-          note.tag = tagInput.value.slice(0, 24);
-          if (!note.tag.trim()) note.subtag = "";
-          note.updatedAt = Date.now();
-          save();
-          if (subtagInput) subtagInput.disabled = !note.tag.trim();
-        });
-        tagInput.addEventListener("blur", function () {
-          const note = active();
-          if (!note) return;
-          note.tag = note.tag.trim().slice(0, 24);
-          note.subtag = note.tag ? note.subtag.trim().slice(0, 24) : "";
-          save();
-          render();
-        });
-      }
-      if (subtagInput && active()) {
-        subtagInput.addEventListener("input", function () {
-          const note = active();
-          if (!note) return;
-          note.subtag = subtagInput.value.slice(0, 24);
-          note.updatedAt = Date.now();
-          save();
-        });
-        subtagInput.addEventListener("blur", function () {
-          const note = active();
-          if (!note) return;
-          note.subtag = note.tag.trim() ? note.subtag.trim().slice(0, 24) : "";
-          save();
-          render();
-        });
-      }
-      const search = document.getElementById("search");
-      if (search) {
-        search.addEventListener("input", function () {
-          state.search = search.value;
-          render();
-          const next = document.getElementById("search");
-          if (next) { next.focus(); next.setSelectionRange(state.search.length, state.search.length); }
-        });
-      }
-      const editor = document.getElementById("editor");
-      if (editor) {
-        editor.addEventListener("input", function () {
-          const note = active();
-          if (!note) return;
-          note.content = editor.value;
-          if (!note.titleCustom) note.title = titleFrom(note.content);
-          note.updatedAt = Date.now();
-          save();
-          const item = document.querySelector(".note-item.active");
-          if (item) {
-            item.querySelector("h3").textContent = (note.title.trim() || "未命名筆記");
-            item.querySelector(".snip").textContent = snippetFrom(note.content) || "空白筆記";
-            item.querySelector("time").textContent = relTime(note.updatedAt);
-          }
-          const title = document.getElementById("title-input");
-          if (title && document.activeElement !== title) title.value = note.title;
-          const preview = document.querySelector(".prose");
-          if (preview) preview.innerHTML = renderMd(note.content);
-          const status = document.querySelector(".status span");
-          if (status) status.textContent = countWords(note.content) + " 字　/　最後編輯 " + relTime(note.updatedAt);
-        });
-        editor.addEventListener("keydown", function (e) {
-          if (e.key === "Tab") {
-            e.preventDefault();
-            const s = editor.selectionStart, end = editor.selectionEnd;
-            editor.setRangeText("  ", s, end, "end");
-            editor.dispatchEvent(new Event("input"));
-          }
-        });
-      }
-    }
-    document.addEventListener("keydown", function (e) {
-      const t = e.target;
-      const inField = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA");
-      const meta = e.metaKey || e.ctrlKey;
-      if (e.key === "Escape") {
-        if (state.shortcuts) { state.shortcuts = false; render(); return; }
-        if (state.focusMode) { state.focusMode = false; state.sidebarOpen = true; render(); return; }
-        if (!desktop() && state.sidebarOpen) { state.sidebarOpen = false; render(); }
-        return;
-      }
-      if (!inField && e.key === "?") { e.preventDefault(); state.shortcuts = !state.shortcuts; render(); return; }
-      if (!inField && e.key === "/" && !meta) { e.preventDefault(); state.sidebarOpen = true; render(); var s = document.getElementById("search"); if (s) s.focus(); return; }
-      if (!meta) return;
-      const k = e.key.toLowerCase();
-      if (k === "n") { e.preventDefault(); createNote(); }
-      if (k === "k") { e.preventDefault(); state.sidebarOpen = true; render(); var s2 = document.getElementById("search"); if (s2) s2.focus(); }
-      if (k === "e") { e.preventDefault(); cycleView(); }
-      if (k === "b") { e.preventDefault(); state.sidebarOpen = !state.sidebarOpen; state.focusMode = false; render(); }
-      if (e.key === "\\") { e.preventDefault(); state.focusMode = !state.focusMode; state.sidebarOpen = !state.focusMode; render(); }
-      if (e.key === "Backspace" && (!inField || e.shiftKey) && active()) { e.preventDefault(); deleteNote(active().id); }
-    });
-    window.addEventListener("resize", function () { render(); });
+      flush();
+      const first = bits.shift() || "";
+      return [pad + (ordered ? (index + 1) + ". " : "- ") + first].concat(bits.map((part) => part.split("\n").map((line) => pad + "  " + line).join("\n"))).join("\n");
+    }).join("\n");
+  }
+  function block(node) {
+    if (node.nodeType === 3) return (node.textContent || "").replace(/\s+/g, " ").trim();
+    if (node.nodeType !== 1 || skip[node.tagName]) return "";
+    const tag = node.tagName;
+    if (/^H[1-6]$/.test(tag)) return "#".repeat(Number(tag[1])) + " " + textOf(node);
+    if (tag === "P") return textOf(node);
+    if (tag === "PRE") return "```\n" + (node.textContent || "").replace(/\n$/, "") + "\n```";
+    if (tag === "BLOCKQUOTE") return blocks(node).split("\n").map((line) => "> " + line).join("\n");
+    if (tag === "UL" || tag === "OL") return list(node, tag === "OL", 0);
+    if (tag === "TABLE") return table(node);
+    if (tag === "HR") return "---";
+    if (tag === "IMG") return inline(node);
+    return blocks(node);
+  }
+  function blocks(el) { return Array.from(el.childNodes).map(block).filter(Boolean).join("\n\n").replace(/\n{3,}/g, "\n\n").trim(); }
+  const content = blocks(doc.body);
+  const heading = doc.body.querySelector("h1") && doc.body.querySelector("h1").textContent.replace(/\s+/g, " ").trim();
+  const docTitle = doc.querySelector("title") && doc.querySelector("title").textContent.replace(/\s+/g, " ").trim();
+  const fromFile = filename.replace(/\.html?$/i, "").trim();
+  return { title: (heading || docTitle || fromFile || t("untitled")).slice(0, 80), content };
+}
+function importHtmlFiles(files) {
+  Promise.all(Array.from(files).map((file) => file.text().then((html) => htmlToNote(html, file.name)))).then((items) => {
+    const created = items.filter((item) => item.content.trim() || item.title.trim()).map((item) => ({
+      id: uid(), title: item.title, content: item.content, createdAt: Date.now(), updatedAt: Date.now(), tag: "", subtag: "", titleCustom: true
+    }));
+    if (!created.length) return;
+    state.notes = created.concat(state.notes);
+    state.activeId = created[0].id;
+    state.search = "";
+    created.forEach((note) => markDirty(note.id));
+    save();
     render();
+  });
+}
+
+function readTokens() { try { return JSON.parse(localStorage.getItem(TOKEN_KEY) || "null"); } catch (e) { return null; } }
+function writeTokens(tokens) { if (!tokens) localStorage.removeItem(TOKEN_KEY); else localStorage.setItem(TOKEN_KEY, JSON.stringify(tokens)); }
+function hasSession() { return !!(readTokens() && readTokens().accessToken); }
+function loadGis() {
+  if (window.google && window.google.accounts && window.google.accounts.oauth2) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("無法載入 Google 登入"));
+    document.head.appendChild(script);
+  });
+}
+async function exchangeToken(payload) {
+  const response = await fetch(TOKEN_ENDPOINT, { method: "POST", headers: { "content-type": "application/json", accept: "application/json" }, body: JSON.stringify(payload) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error_description || data.message || data.error || ("授權交換失敗（" + response.status + "）"));
+  const accessToken = data.access_token || data.accessToken;
+  if (!accessToken) throw new Error("授權回應沒有 access token");
+  const prev = readTokens();
+  return { accessToken, refreshToken: data.refresh_token || data.refreshToken || (prev && prev.refreshToken) || null, expiresAt: Date.now() + (data.expires_in || data.expiresIn || 3600) * 1000 };
+}
+async function accessToken() {
+  const current = readTokens();
+  if (!current) throw new Error("尚未連線");
+  if (current.expiresAt - Date.now() > 60000) return current.accessToken;
+  if (!current.refreshToken) { writeTokens(null); throw new Error("登入已過期，請再連線一次"); }
+  const next = await exchangeToken({ refresh_token: current.refreshToken, client_id: CLIENT_ID, grant_type: "refresh_token" });
+  next.refreshToken = next.refreshToken || current.refreshToken;
+  writeTokens(next);
+  return next.accessToken;
+}
+async function driveFetch(url, init, retry) {
+  const headers = new Headers((init && init.headers) || {});
+  headers.set("authorization", "Bearer " + await accessToken());
+  const response = await fetch(url, Object.assign({}, init, { headers }));
+  if (response.status === 401 && retry !== false) { const current = readTokens(); if (current) writeTokens(Object.assign({}, current, { expiresAt: 0 })); return driveFetch(url, init, false); }
+  return response;
+}
+async function signIn() {
+  await loadGis();
+  const oauth = window.google && window.google.accounts && window.google.accounts.oauth2;
+  if (!oauth) throw new Error("Google 登入尚未就緒");
+  const code = await new Promise((resolve, reject) => {
+    oauth.initCodeClient({
+      client_id: CLIENT_ID, scope: DRIVE_SCOPE, ux_mode: "popup",
+      callback: (response) => response.code ? resolve(response.code) : reject(new Error(response.error || "未取得授權碼")),
+      error_callback: (error) => reject(new Error(error.message || error.type || "Google 登入失敗"))
+    }).requestCode();
+  });
+  writeTokens(await exchangeToken({ code, client_id: CLIENT_ID, redirect_uri: "postmessage", grant_type: "authorization_code" }));
+}
+async function listFiles() {
+  const files = [];
+  let page = "";
+  do {
+    const url = new URL("https://www.googleapis.com/drive/v3/files");
+    url.searchParams.set("spaces", "appDataFolder");
+    url.searchParams.set("q", "trashed = false");
+    url.searchParams.set("fields", "nextPageToken,files(id,name,appProperties)");
+    url.searchParams.set("pageSize", "100");
+    if (page) url.searchParams.set("pageToken", page);
+    const response = await driveFetch(url.toString());
+    if (!response.ok) throw new Error("讀取 Drive 失敗（" + response.status + "）");
+    const data = await response.json();
+    (data.files || []).forEach((file) => {
+      const name = file.name || "";
+      if (name === LEGACY_NAME) files.push({ legacy: true, fileId: file.id });
+      else if (name.startsWith(NOTE_PREFIX) && name.endsWith(".json")) {
+        const props = file.appProperties || {};
+        files.push({ fileId: file.id, noteId: props.noteId || name.slice(NOTE_PREFIX.length, -5), updatedAt: Number(props.updatedAt) || 0, deleted: props.deleted === "1" });
+      }
+    });
+    page = data.nextPageToken || "";
+  } while (page);
+  return files;
+}
+async function downloadFile(fileId) {
+  const response = await driveFetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media");
+  if (!response.ok) throw new Error("下載筆記失敗（" + response.status + "）");
+  return response.json();
+}
+async function upsertFile(payload, existing) {
+  const deleted = payload.deleted === true;
+  const noteId = payload.id;
+  const updatedAt = deleted ? payload.at : payload.updatedAt;
+  const metadata = { name: NOTE_PREFIX + noteId + ".json", appProperties: { kind: "mojian-note", noteId, updatedAt: String(updatedAt), deleted: deleted ? "1" : "0" } };
+  if (!existing) metadata.parents = ["appDataFolder"];
+  const boundary = "mojian-note";
+  const body = ["--" + boundary, "Content-Type: application/json; charset=UTF-8", "", JSON.stringify(metadata), "--" + boundary, "Content-Type: application/json; charset=UTF-8", "", JSON.stringify(deleted ? { deleted: true, id: noteId, at: updatedAt } : payload), "--" + boundary + "--", ""].join("\r\n");
+  const url = existing ? "https://www.googleapis.com/upload/drive/v3/files/" + existing.fileId + "?uploadType=multipart" : "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+  const response = await driveFetch(url, { method: existing ? "PATCH" : "POST", headers: { "content-type": "multipart/related; boundary=" + boundary }, body });
+  if (!response.ok) throw new Error("上傳筆記失敗（" + response.status + "）");
+}
+async function deleteFile(fileId) {
+  const response = await driveFetch("https://www.googleapis.com/drive/v3/files/" + fileId, { method: "DELETE" });
+  if (!response.ok && response.status !== 404) throw new Error("刪除雲端筆記失敗（" + response.status + "）");
+}
+async function syncNotes() {
+  const listed = await listFiles();
+  const legacy = listed.find((file) => file.legacy);
+  const notes = new Map(state.notes.map((note) => [note.id, note]));
+  const tombs = new Map();
+  state.tombstones.forEach((item) => { if (item && item.id) tombs.set(item.id, Math.max(tombs.get(item.id) || 0, item.at)); });
+  if (legacy) {
+    const bundle = await downloadFile(legacy.fileId);
+    (bundle.tombstones || []).forEach((item) => { if (item && item.id) tombs.set(item.id, Math.max(tombs.get(item.id) || 0, item.at)); });
+    (bundle.notes || []).forEach((note) => {
+      normalize(note);
+      if ((tombs.get(note.id) || 0) >= note.updatedAt) return;
+      const local = notes.get(note.id);
+      if (!local || note.updatedAt > local.updatedAt) notes.set(note.id, note);
+      tombs.delete(note.id);
+    });
+  }
+  const remote = new Map();
+  const extras = [];
+  listed.forEach((file) => {
+    if (!file.noteId) return;
+    const prev = remote.get(file.noteId);
+    if (!prev || file.updatedAt >= prev.updatedAt) { if (prev) extras.push(prev.fileId); remote.set(file.noteId, file); }
+    else extras.push(file.fileId);
+  });
+  const uploads = [];
+  const downloads = [];
+  remote.forEach((file, id) => {
+    const local = notes.get(id);
+    const tomb = tombs.get(id) || 0;
+    if (!file.updatedAt) { downloads.push(file); return; }
+    if (file.deleted) {
+      if (local && local.updatedAt > file.updatedAt) { uploads.push({ id, note: local, file }); tombs.delete(id); }
+      else { notes.delete(id); tombs.set(id, Math.max(tomb, file.updatedAt)); }
+      return;
+    }
+    if (tomb >= file.updatedAt && (!local || local.updatedAt <= tomb)) { uploads.push({ id, tombAt: Math.max(tomb, file.updatedAt), file }); notes.delete(id); return; }
+    if (!local || file.updatedAt > local.updatedAt) downloads.push(file);
+    else if (local.updatedAt > file.updatedAt) uploads.push({ id, note: local, file });
+  });
+  notes.forEach((note) => {
+    if (remote.has(note.id)) return;
+    const tomb = tombs.get(note.id) || 0;
+    if (tomb >= note.updatedAt) { notes.delete(note.id); uploads.push({ id: note.id, tombAt: tomb }); }
+    else { uploads.push({ id: note.id, note }); tombs.delete(note.id); }
+  });
+  const queuedIds = new Set(uploads.map((item) => item.id));
+  tombs.forEach((at, id) => {
+    if (notes.has(id) || queuedIds.has(id)) return;
+    const file = remote.get(id);
+    if (!file) uploads.push({ id, tombAt: at });
+    else if (!file.deleted || file.updatedAt < at) uploads.push({ id, tombAt: at, file });
+  });
+  for (const file of downloads) {
+    const loaded = await downloadFile(file.fileId);
+    if (loaded && loaded.deleted) {
+      const local = notes.get(loaded.id);
+      if (!(local && local.updatedAt > loaded.at)) { notes.delete(loaded.id); tombs.set(loaded.id, Math.max(tombs.get(loaded.id) || 0, loaded.at || 0)); }
+      continue;
+    }
+    normalize(loaded);
+    if ((tombs.get(loaded.id) || 0) >= loaded.updatedAt) notes.delete(loaded.id);
+    else { notes.set(loaded.id, loaded); tombs.delete(loaded.id); }
+  }
+  state.applying = true;
+  state.notes = Array.from(notes.values());
+  state.tombstones = Array.from(tombs.entries()).map(([id, at]) => ({ id, at })).slice(-500);
+  if (!state.notes.some((note) => note.id === state.activeId)) state.activeId = state.notes[0] ? state.notes[0].id : null;
+  state.applying = false;
+  save();
+  for (const item of uploads) await upsertFile(item.note || { deleted: true, id: item.id, at: item.tombAt }, item.file);
+  for (const fileId of extras) await deleteFile(fileId);
+  if (legacy) await deleteFile(legacy.fileId);
+}
+async function runSync() {
+  if (!hasSession()) return;
+  if (syncing) { syncQueued = true; return; }
+  syncing = true;
+  state.syncing = true;
+  state.syncError = "";
+  const seen = new Map(dirtyRev);
+  paintSync();
+  try {
+    await syncNotes();
+    seen.forEach((rev, id) => { if (dirtyRev.get(id) === rev) dirtyRev.delete(id); });
+    state.syncError = "";
+  } catch (error) {
+    state.syncError = error.message || "同步失敗";
+    showToast(state.syncError, false);
+  } finally {
+    syncing = false;
+    state.syncing = false;
+    paintSync();
+    render();
+    if (syncQueued) { syncQueued = false; runSync(); }
+  }
+}
+function syncNow() { clearTimeout(syncTimer); syncTimer = 0; runSync(); }
+async function connect() {
+  state.syncError = "";
+  try { await signIn(); await runSync(); }
+  catch (error) { state.syncError = error.message || "連線失敗"; showToast(state.syncError, false); render(); }
+}
+function disconnect() {
+  clearTimeout(syncTimer); syncTimer = 0;
+  writeTokens(null);
+  dirtyRev.clear();
+  state.syncError = "";
+  render();
+}
+
+let toastTimer = 0;
+function showToast(message, withUndo) {
+  const el = document.getElementById("toast");
+  el.hidden = false;
+  el.innerHTML = esc(message) + (withUndo ? ' <button type="button" id="toast-undo">' + esc(t("undo")) + "</button>" : "");
+  const button = document.getElementById("toast-undo");
+  if (button) button.onclick = () => undo();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 5000);
+}
+function hideToast() { document.getElementById("toast").hidden = true; }
+function paintSync() {
+  const on = hasSession();
+  document.querySelectorAll("[data-dot]").forEach((el) => {
+    const id = el.getAttribute("data-dot");
+    const dirty = on && (id === "*" ? dirtyRev.size > 0 || !!state.syncError : dirtyRev.has(id));
+    if (!on) { el.hidden = true; return; }
+    el.hidden = false;
+    const pulsing = state.syncing && (id === "*" || dirtyRev.has(id));
+    el.innerHTML = '<span class="dot ' + (!dirty || pulsing ? "ok" : "bad") + (pulsing ? " pulse" : "") + '"></span>';
+    el.title = pulsing ? t("syncing") : dirty ? t("unsynced") : t("synced");
+    el.disabled = !dirty || pulsing;
+  });
+}
+function dotHtml(id) { return '<button type="button" class="dot-btn" data-dot="' + esc(id) + '" hidden></button>'; }
+
+function render(opts) {
+  opts = opts || {};
+  const note = active();
+  const list = filtered();
+  const view = state.view;
+  const showSidebar = !state.focusMode && state.sidebarOpen;
+  const stacked = !desktop() && view === "split";
+  const font = desktop() ? state.font : "md";
+  const width = desktop() ? state.width : "default";
+  const measure = ' style="font-size:' + FONT[font] + ";max-width:" + (WIDTH[width] === "none" ? "none" : WIDTH[width]) + '"';
+  const connected = hasSession();
+  const listHtml = list.length ? list.map((item) => {
+    const label = displayTitle(item);
+    const pills = [item.tag, item.subtag].filter((value) => value && value.trim()).map((value) => '<span class="pill">' + esc(value.trim()) + "</span>").join("");
+    return '<div class="note-item ' + (item.id === state.activeId ? "active" : "") + '" data-open="' + item.id + '"><div class="note-top"><h3>' + highlight(label, state.search) + '</h3><button class="icon-btn sm mini" data-dl="' + item.id + '" aria-label="download">' + icon.down + '</button><button class="icon-btn sm mini danger" data-del="' + item.id + '" aria-label="delete">' + icon.x + '</button></div><p class="snip">' + (snippetFrom(item.content) ? highlight(snippetFrom(item.content), state.search) : esc(t("blank"))) + '</p><div class="note-foot"><span class="pills">' + pills + "</span><time>" + relTime(item.updatedAt) + "</time>" + dotHtml(item.id) + "</div></div>";
+  }).join("") : '<div class="empty"><p>' + esc(state.notes.length ? t("none") : t("empty")) + "</p></div>";
+  const tags = [];
+  state.notes.forEach((item) => { if (item.tag.trim() && tags.indexOf(item.tag.trim()) < 0) tags.push(item.tag.trim()); });
+  tags.sort((a, b) => a.localeCompare(b, state.locale === "en" ? "en" : "zh-Hant"));
+  const subtags = [];
+  if (state.tagFilter && state.tagFilter !== "未分類") state.notes.forEach((item) => { if (item.tag.trim() === state.tagFilter && item.subtag.trim() && subtags.indexOf(item.subtag.trim()) < 0) subtags.push(item.subtag.trim()); });
+  const hasUntagged = state.notes.some((item) => !item.tag.trim());
+  const chips = (tags.length || hasUntagged) ? '<div class="chips"><button class="chip' + (state.tagFilter ? "" : " active") + '" data-tag="">' + esc(t("all")) + "</button>" + tags.map((tag) => '<button class="chip' + (state.tagFilter === tag ? " active" : "") + '" data-tag="' + esc(tag) + '">' + esc(tag) + "</button>").join("") + (hasUntagged ? '<button class="chip' + (state.tagFilter === "未分類" ? " active" : "") + '" data-tag="未分類">' + esc(t("untagged")) + "</button>" : "") + "</div>" + (subtags.length ? '<div class="chips">' + subtags.map((sub) => '<button class="chip' + (state.subtagFilter === sub ? " active" : "") + '" data-sub="' + esc(sub) + '">' + esc(sub) + "</button>").join("") + "</div>" : "") : "";
+  const viewButtons = ["write", "split", "preview"].map((id) => {
+    const label = t(id === "write" ? "edit" : id);
+    const glyph = id === "write" ? icon.pencil : id === "split" ? icon.cols : icon.eye;
+    return '<button type="button" role="radio" data-view="' + id + '" aria-checked="' + (view === id) + '" aria-label="' + esc(label) + '">' + glyph + '<span class="lbl">' + esc(label) + "</span></button>";
+  }).join("");
+  const tagFields = note ? '<div class="tag-fields" id="tag-fields"><input id="tag-input" class="tag-input" maxlength="24" placeholder="' + esc(t("tag")) + '" aria-label="' + esc(t("tag")) + '" value="' + esc(note.tag) + '" /><input id="subtag-input" class="tag-input" maxlength="24" placeholder="' + esc(t("subtag")) + '" aria-label="' + esc(t("subtag")) + '" value="' + esc(note.subtag) + '"' + (note.tag.trim() ? "" : " disabled") + " /></div>" : "";
+  const choices = '<div class="writing"><div class="choice" role="radiogroup" aria-label="' + esc(t("font")) + '">' + ["sm", "md", "lg", "xl"].map((id, index) => '<button type="button" data-font="' + id + '" aria-checked="' + (state.font === id) + '" title="' + esc(t(["fontSm", "fontMd", "fontLg", "fontXl"][index])) + '"><span class="mark-a" style="font-size:' + [11, 13, 16, 18][index] + 'px">A</span></button>').join("") + '</div><div class="choice" role="radiogroup" aria-label="' + esc(t("width")) + '">' + ["narrow", "default", "wide", "full"].map((id, index) => '<button type="button" data-width="' + id + '" aria-checked="' + (state.width === id) + '" title="' + esc(t(["widthNarrow", "widthDefault", "widthWide", "widthFull"][index])) + '"><span class="mark-w" style="width:' + [6, 10, 16, 22][index] + 'px"></span></button>').join("") + "</div></div>";
+  const toolbar = state.focusMode
+    ? '<div style="position:absolute;top:12px;right:12px;z-index:10"><button class="icon-btn" data-act="focus" aria-label="' + esc(t("leaveFocus")) + '">' + icon.min + "</button></div>"
+    : '<header class="toolbar"><div class="toolbar-row"><button class="icon-btn" data-act="sidebar" aria-label="sidebar">' + icon.panel + '</button><input id="title-input" class="title-input" maxlength="80" placeholder="' + esc(t("untitled")) + '" value="' + esc(note ? note.title : "") + '" ' + (note ? "" : "disabled") + ' /><div class="tag-slot-desk">' + (desktop() ? tagFields : "") + '</div><button class="icon-btn" data-act="new" aria-label="' + esc(t("newNote")) + '">' + icon.plus + '</button><button class="icon-btn" data-act="focus" aria-label="' + esc(t("focus")) + '">' + icon.max + "</button></div>" +
+      (note ? '<div class="toolbar-row"><div class="tag-slot-mob">' + (desktop() ? "" : tagFields) + '</div><div class="view-switch" role="radiogroup">' + viewButtons + "</div>" + choices + "</div>" : "") + "</header>";
+  const panes = note ? '<div class="panes' + (stacked ? " stack" : "") + '">' +
+    (view !== "preview" ? '<div class="pane"><textarea id="editor" class="editor" placeholder="' + esc(t("start")) + '"' + measure + ">" + esc(note.content) + "</textarea></div>" : "") +
+    (view !== "write" ? '<div class="pane preview"><article class="prose"' + measure + ">" + renderMd(note.content) + "</article></div>" : "") +
+    "</div>" + (state.focusMode ? "" : '<footer class="status"><span>' + countWords(note.content) + " " + esc(t("words")) + "　/　" + esc(t("edited")) + " " + relTime(note.updatedAt) + '</span><span class="hints">' + mod + " N　" + mod + " E　? </span></footer>") : "";
+  const helpRows = [
+    [t("newNote"), "N"],
+    [t("search"), "K"],
+    [t("edit") + " / " + t("split") + " / " + t("preview"), "E"],
+    [state.locale === "en" ? "Show or hide sidebar" : "顯示或隱藏側邊欄", "B"],
+    [t("focus"), "\\"],
+    [state.locale === "en" ? "Delete current note" : "刪除目前筆記", "⌫"]
+  ];
+  const help = state.shortcuts ? '<div class="dialog-bg" data-act="help"><div class="dialog" data-stop="1"><h2>' + esc(t("helpTitle")) + "</h2><p>" + esc(t("helpHint")) + "</p><ul>" +
+    helpRows.map((row) => "<li><span>" + esc(row[0]) + "</span><span><kbd>" + mod + "</kbd> <kbd>" + row[1] + "</kbd></span></li>").join("") +
+    "<li><span>" + esc(state.locale === "en" ? "Open this help" : "開啟此說明") + "</span><kbd>?</kbd></li></ul></div></div>" : "";
+  document.getElementById("app").innerHTML =
+    (showSidebar && !desktop() ? '<button class="backdrop" data-act="close-sidebar" aria-label="' + esc(t("close")) + '"></button>' : "") +
+    '<aside class="sidebar ' + (showSidebar ? "" : "closed") + '"><div class="brand"><div class="brand-text"><h1>墨箋</h1><p class="brand-sub">' + esc(connected ? t("cloud") : t("local")) + (connected ? dotHtml("*") : "") + '</p></div><button class="icon-btn close-mobile" data-act="close-sidebar" aria-label="' + esc(t("close")) + '">' + icon.x + '</button><button class="icon-btn" data-act="import" aria-label="' + esc(t("importHtml")) + '">' + icon.up + '</button><button class="icon-btn" data-act="new" aria-label="' + esc(t("newNote")) + '">' + icon.plus + '</button></div><div class="search-wrap">' + icon.search + '<input id="search" type="search" placeholder="' + esc(t("search")) + '" value="' + esc(state.search) + '" /></div>' + chips + '<div class="list">' + listHtml + '</div><div class="side-foot"><button class="text-btn" data-act="login">' + (connected ? icon.out : icon.in) + esc(connected ? t("logout") : t("login")) + '</button><span class="grow"></span><button class="icon-btn" data-act="help" aria-label="' + esc(t("help")) + '">' + icon.keys + '</button><button class="icon-btn" data-act="lang" aria-label="language">' + (state.locale === "zh" ? "EN" : "中") + '</button><button class="icon-btn" data-act="theme" aria-label="theme">' + (state.theme === "dark" ? icon.sun : icon.moon) + "</button></div></aside>" +
+    '<main class="main">' + toolbar + (note ? panes : '<div class="empty"><h2>' + esc(t("emptyTitle")) + "</h2><p>" + esc(t("emptyBody")) + '</p><button class="primary" data-act="new">' + icon.plus + esc(t("newNote")) + "</button></div>") + "</main>" + help;
+  bind();
+  paintSync();
+  const editor = document.getElementById("editor");
+  if (opts.focusEditor && editor) { editor.focus(); editor.selectionStart = editor.selectionEnd = editor.value.length; }
+}
+function bind() {
+  document.querySelectorAll("[data-act]").forEach((el) => el.addEventListener("click", (event) => {
+    if (el.getAttribute("data-stop")) return;
+    const act = el.getAttribute("data-act");
+    if (act === "new") createNote();
+    if (act === "import") document.getElementById("import-file").click();
+    if (act === "sidebar") { state.sidebarOpen = !state.sidebarOpen; state.focusMode = false; render(); }
+    if (act === "close-sidebar") { state.sidebarOpen = false; render(); }
+    if (act === "focus") { state.focusMode = !state.focusMode; state.sidebarOpen = !state.focusMode; render(); }
+    if (act === "help") { state.shortcuts = !state.shortcuts; render(); }
+    if (act === "lang") { state.locale = state.locale === "zh" ? "en" : "zh"; savePrefs(); render(); }
+    if (act === "theme") { state.theme = state.theme === "dark" ? "light" : "dark"; savePrefs(); render(); }
+    if (act === "login") { if (hasSession()) disconnect(); else connect(); }
+    event.stopPropagation();
+  }));
+  document.querySelectorAll("[data-stop]").forEach((el) => el.addEventListener("click", (event) => event.stopPropagation()));
+  document.querySelectorAll("[data-open]").forEach((el) => el.addEventListener("click", () => { state.activeId = el.getAttribute("data-open"); if (!desktop()) state.sidebarOpen = false; save(); render(); }));
+  document.querySelectorAll("[data-del]").forEach((el) => el.addEventListener("click", (event) => { event.stopPropagation(); deleteNote(el.getAttribute("data-del")); }));
+  document.querySelectorAll("[data-dl]").forEach((el) => el.addEventListener("click", (event) => { event.stopPropagation(); const note = state.notes.find((item) => item.id === el.getAttribute("data-dl")); if (note) downloadNote(note); }));
+  document.querySelectorAll("[data-view]").forEach((el) => el.addEventListener("click", (event) => { event.stopPropagation(); setView(el.getAttribute("data-view")); }));
+  document.querySelectorAll("[data-font]").forEach((el) => el.addEventListener("click", () => { state.font = el.getAttribute("data-font"); savePrefs(); render(); }));
+  document.querySelectorAll("[data-width]").forEach((el) => el.addEventListener("click", () => { state.width = el.getAttribute("data-width"); savePrefs(); render(); }));
+  document.querySelectorAll("[data-tag]").forEach((el) => el.addEventListener("click", (event) => { event.stopPropagation(); const tag = el.getAttribute("data-tag") || ""; state.tagFilter = state.tagFilter === tag ? "" : tag; state.subtagFilter = ""; render(); }));
+  document.querySelectorAll("[data-sub]").forEach((el) => el.addEventListener("click", (event) => { event.stopPropagation(); const sub = el.getAttribute("data-sub") || ""; state.subtagFilter = state.subtagFilter === sub ? "" : sub; render(); }));
+  document.querySelectorAll("[data-dot]").forEach((el) => el.addEventListener("click", (event) => { event.stopPropagation(); if (!el.disabled) syncNow(); }));
+  const titleInput = document.getElementById("title-input");
+  if (titleInput && active()) {
+    titleInput.addEventListener("input", () => {
+      const note = active();
+      note.title = titleInput.value.slice(0, 80); note.titleCustom = true; note.updatedAt = Date.now(); markDirty(note.id); save();
+      const heading = document.querySelector(".note-item.active h3"); if (heading) heading.textContent = displayTitle(note);
+    });
+    titleInput.addEventListener("blur", () => {
+      const note = active(); if (!note) return;
+      const trimmed = note.title.trim().slice(0, 80);
+      if (!trimmed) { note.title = titleFrom(note.content); note.titleCustom = false; } else note.title = trimmed;
+      save(); render();
+    });
+  }
+  const tagInput = document.getElementById("tag-input");
+  const subtagInput = document.getElementById("subtag-input");
+  function touchTags(blur) {
+    const note = active(); if (!note) return;
+    if (tagInput) note.tag = tagInput.value.slice(0, 24);
+    if (subtagInput) note.subtag = note.tag.trim() ? subtagInput.value.slice(0, 24) : "";
+    if (blur) { note.tag = note.tag.trim(); note.subtag = note.tag ? note.subtag.trim() : ""; }
+    note.updatedAt = Date.now(); markDirty(note.id); save();
+    if (subtagInput) subtagInput.disabled = !note.tag.trim();
+    if (blur) render();
+  }
+  if (tagInput) { tagInput.addEventListener("input", () => touchTags(false)); tagInput.addEventListener("blur", () => touchTags(true)); }
+  if (subtagInput) { subtagInput.addEventListener("input", () => touchTags(false)); subtagInput.addEventListener("blur", () => touchTags(true)); }
+  const search = document.getElementById("search");
+  if (search) search.addEventListener("input", () => { state.search = search.value; render(); const next = document.getElementById("search"); if (next) { next.focus(); next.setSelectionRange(state.search.length, state.search.length); } });
+  const editor = document.getElementById("editor");
+  if (editor) {
+    editor.addEventListener("input", () => {
+      const note = active(); if (!note) return;
+      note.content = editor.value;
+      if (!note.titleCustom) note.title = titleFrom(note.content);
+      note.updatedAt = Date.now(); markDirty(note.id); save();
+      const item = document.querySelector(".note-item.active");
+      if (item) { item.querySelector("h3").textContent = displayTitle(note); item.querySelector(".snip").textContent = snippetFrom(note.content) || t("blank"); item.querySelector("time").textContent = relTime(note.updatedAt); }
+      const title = document.getElementById("title-input");
+      if (title && document.activeElement !== title) title.value = note.title;
+      const preview = document.querySelector(".prose");
+      if (preview) preview.innerHTML = renderMd(note.content);
+      const status = document.querySelector(".status span");
+      if (status) status.textContent = countWords(note.content) + " " + t("words") + "　/　" + t("edited") + " " + relTime(note.updatedAt);
+    });
+    editor.addEventListener("keydown", (event) => {
+      if (event.key !== "Tab") return;
+      event.preventDefault();
+      editor.setRangeText("  ", editor.selectionStart, editor.selectionEnd, "end");
+      editor.dispatchEvent(new Event("input"));
+    });
+  }
+}
+document.getElementById("import-file").addEventListener("change", (event) => {
+  const files = event.target.files;
+  event.target.value = "";
+  if (files && files.length) importHtmlFiles(files);
+});
+document.addEventListener("keydown", (event) => {
+  const target = event.target;
+  const inField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+  const meta = event.metaKey || event.ctrlKey;
+  if (event.key === "Escape") {
+    if (state.shortcuts) { state.shortcuts = false; render(); return; }
+    if (state.focusMode) { state.focusMode = false; state.sidebarOpen = true; render(); return; }
+    if (!desktop() && state.sidebarOpen) { state.sidebarOpen = false; render(); }
+    return;
+  }
+  if (!inField && event.key === "?") { event.preventDefault(); state.shortcuts = !state.shortcuts; render(); return; }
+  if (!inField && event.key === "/" && !meta) { event.preventDefault(); state.sidebarOpen = true; render(); const search = document.getElementById("search"); if (search) search.focus(); return; }
+  if (!meta) {
+    if (!inField && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+      const notes = filtered();
+      if (!notes.length) return;
+      event.preventDefault();
+      const index = Math.max(0, notes.findIndex((note) => note.id === state.activeId));
+      const next = notes[Math.min(notes.length - 1, Math.max(0, index + (event.key === "ArrowDown" ? 1 : -1)))];
+      if (next) { state.activeId = next.id; save(); render(); }
+    }
+    return;
+  }
+  const key = event.key.toLowerCase();
+  if (key === "n") { event.preventDefault(); createNote(); }
+  if (key === "k") { event.preventDefault(); state.sidebarOpen = true; render(); const search = document.getElementById("search"); if (search) search.focus(); }
+  if (key === "e") { event.preventDefault(); cycleView(); }
+  if (key === "b") { event.preventDefault(); state.sidebarOpen = !state.sidebarOpen; state.focusMode = false; render(); }
+  if (event.key === "\\") { event.preventDefault(); state.focusMode = !state.focusMode; state.sidebarOpen = !state.focusMode; render(); }
+  if (event.key === "Backspace" && (!inField || event.shiftKey) && active()) { event.preventDefault(); deleteNote(active().id); }
+});
+window.addEventListener("resize", () => render());
+savePrefs();
+render();
+if (hasSession()) syncNow();
   </script>
 </body>
-
 </html>
