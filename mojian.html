@@ -806,8 +806,13 @@
       display: inline-block;
     }
 
-    .backdrop {
-      display: none;
+    .file-proxy {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
     }
 
     @media (max-width: 767px) {
@@ -876,7 +881,7 @@
 <body>
   <div class="app" id="app"></div>
   <div class="toast" id="toast" hidden></div>
-  <input id="import-file" type="file" accept=".html,.htm,text/html" multiple hidden />
+  <input id="import-file" class="file-proxy" type="file" accept=".html,.htm,text/html" multiple />
   <script>
     const STORAGE = "mojian-notes-pages-v1";
     const PREFS = "mojian-pages-prefs";
@@ -1206,7 +1211,7 @@
         created.forEach((note) => markDirty(note.id));
         save();
         render();
-      });
+      }).catch((error) => showToast(error && error.message ? error.message : "匯入失敗", false));
     }
 
     function readTokens() { try { return JSON.parse(localStorage.getItem(TOKEN_KEY) || "null"); } catch (e) { return null; } }
@@ -1582,9 +1587,9 @@
       }
     }
     document.getElementById("import-file").addEventListener("change", (event) => {
-      const files = event.target.files;
+      const files = Array.from(event.target.files || []);
       event.target.value = "";
-      if (files && files.length) importHtmlFiles(files);
+      if (files.length) importHtmlFiles(files);
     });
     document.addEventListener("keydown", (event) => {
       const target = event.target;
